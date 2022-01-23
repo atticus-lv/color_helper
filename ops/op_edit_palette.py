@@ -65,7 +65,12 @@ class CH_OT_add_palette(bpy.types.Operator):
     palette_index: IntProperty()
 
     def execute(self, context):
-        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        if len(context.scene.ch_palette_collection) == 0:
+            collection = context.scene.ch_palette_collection.add()
+            collection.name = 'Collection'
+        else:
+            collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+
         item = collection.palettes.add()
 
         item.name = 'Palette' + str(len(collection.palettes))
