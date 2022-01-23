@@ -95,8 +95,18 @@ class CH_Preference(bpy.types.AddonPreferences):
         col.prop(self, 'asset_lib', icon='COLOR')
 
 
+class CH_OT_load_asset(bpy.types.Operator):
+    bl_idname = 'ch.load_asset'
+    bl_label = 'Load Asset'
+
+    def execute(self, context):
+        load_asset()
+        return {'FINISHED'}
+
+
 classes = [
-    CH_Preference
+    CH_Preference,
+    CH_OT_load_asset,
 ]
 
 addon_keymaps = []
@@ -114,6 +124,7 @@ def add_keybind():
         kmi = km.keymap_items.new('wm.call_menu_pie', 'C', 'PRESS', alt=True)
         kmi.properties.name = "CH_MT_pop_menu"
         addon_keymaps.append((km, kmi))
+
 
 def remove_keybind():
     wm = bpy.context.window_manager

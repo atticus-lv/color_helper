@@ -8,7 +8,12 @@ class CreatPaletteBase:
 
     @classmethod
     def poll(cls, context):
-        return context.space_data.type == "NODE_EDITOR" and context.space_data.tree_type == 'ShaderNodeTree'
+        return (
+                (context.area.ui_type == 'VIEW_3D') or
+                (hasattr(context.space_data, 'edit_tree') and
+                 context.space_data.edit_tree and
+                 context.space_data.edit_tree.bl_idname == 'ShaderNodeTree')
+        )
 
     def _return(self, error_msg=None, info_msg=None):
         if error_msg:

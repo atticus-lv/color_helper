@@ -63,16 +63,20 @@ class CH_PT_node_editor(bpy.types.Panel):
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
 
-    def draw_ui(self,context,layout):
+    def draw_ui(self, context, layout):
         if len(context.scene.ch_palette_collection) != 0:
             collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
 
             row = layout.row()
-            row.alignment = "RIGHT"
             row.scale_y = 1.25
             row.scale_x = 1.25
             row.separator()
-            row.menu('CH_MT_collection_switcher', text=collection.name, icon='OUTLINER_COLLECTION')
+            row.menu('CH_MT_collection_switcher', text=collection.name, icon='COLOR')
+
+            d = row.row(align=True)
+            d.alert = True
+            d.operator('ch.remove_collection', icon='X',
+                       text='').collection_index = context.scene.ch_palette_collection_index
 
             for i, palette in enumerate(collection.palettes):
                 col = layout.column().box()
@@ -102,16 +106,20 @@ class CH_PT_node_editor(bpy.types.Panel):
                 row = col.row()
                 self.draw_palette_color(row, palette, i)
 
-        row = layout.row()
-        row.scale_y = row.scale_x = 1.25
+        col = layout.column()
+        col.scale_y = col.scale_x = 1.25
+        row = col.row()
         row.operator('ch.add_palette', icon='ADD')
-        row.operator('ch.create_palette_from_palette', icon='COLOR')
+        row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC')
         row.operator('ch.create_palette_from_clipboard', icon='PASTEDOWN')
+
+        col.separator()
+        col.operator('ch.load_asset', icon='COLOR')
 
     def draw(self, context):
         layout = self.layout
 
-        self.draw_ui(context,layout)
+        self.draw_ui(context, layout)
 
 
 class CH_MT_pop_menu(bpy.types.Menu):
@@ -131,7 +139,7 @@ class CH_MT_pop_menu(bpy.types.Menu):
         layout = self.layout
         pie = layout.menu_pie()
         pie.separator()
-        pie.popover(panel = 'CH_PT_node_editor')
+        pie.popover(panel='CH_PT_node_editor')
 
 
 ui_panel = (

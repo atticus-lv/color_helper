@@ -45,6 +45,29 @@ def hsv_to_rgb(h, s, v):
         return v, p, q
 
 
+class CH_OT_add_collection(bpy.types.Operator):
+    bl_idname = 'ch.add_collection'
+    bl_label = 'Add Collection'
+
+    def execute(self, context):
+        collection = context.scene.ch_palette_collection.add()
+        collection.name = 'Collection' + str(len(context.scene.ch_palette_collection))
+
+        return {'FINISHED'}
+
+
+class CH_OT_remove_collection(bpy.types.Operator):
+    bl_idname = 'ch.remove_collection'
+    bl_label = 'Remove Collection'
+
+    collection_index: IntProperty()
+
+    def execute(self, context):
+        context.scene.ch_palette_collection.remove(self.collection_index)
+
+        return {'FINISHED'}
+
+
 class CH_OT_remove_palette(bpy.types.Operator):
     bl_idname = 'ch.remove_palette'
     bl_label = 'Remove Palette'
@@ -76,47 +99,6 @@ class CH_OT_add_palette(bpy.types.Operator):
         item.name = 'Palette' + str(len(collection.palettes))
 
         return {'FINISHED'}
-
-
-class CH_OT_sort_color(bpy.types.Operator):
-    bl_idname = 'ch.sort_color'
-    bl_label = 'Sort Color'
-
-    mode: EnumProperty(name='Mode', items=[
-        ('0', 'Hue', ''),
-        ('1', 'Saturation', ''),
-        ('2', 'Value', ''),
-    ])
-
-    reverse: BoolProperty(name='Reverse', default=False)
-
-    palette_index: IntProperty()
-
-    def execute(self, context):
-        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
-        palette = collection.palettes[self.palette_index]
-
-        original_colors = sorted([
-            (
-                [(r, g, b)[int(self.mode)] for (r, g, b) in [rgb_to_hsv(*color.color[:3])]], # sort key
-                tuple(color.color) # source color
-            ) for color in palette.colors], reverse=self.reverse
-        )
-
-        for new_index, (hsv, color) in enumerate(original_colors):
-            palette.colors[new_index].color = color
-
-        context.area.tag_redraw()
-
-        return {'FINISHED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, 'mode',expand = True)
-        layout.prop(self, 'reverse')
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self,width = 200  )
 
 
 class CH_OT_add_color(bpy.types.Operator):
@@ -152,7 +134,51 @@ class CH_OT_remove_color(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class CH_OT_sort_color(bpy.types.Operator):
+    bl_idname = 'ch.sort_color'
+    bl_label = 'Sort Color'
+
+    mode: EnumProperty(name='Mode', items=[
+        ('0', 'Hue', ''),
+        ('1', 'Saturation', ''),
+        ('2', 'Value', ''),
+    ])
+
+    reverse: BoolProperty(name='Reverse', default=False)
+
+    palette_index: IntProperty()
+
+    def execute(self, context):
+        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        palette = collection.palettes[self.palette_index]
+
+        original_colors = sorted([
+            (
+                [(r, g, b)[int(self.mode)] for (r, g, b) in [rgb_to_hsv(*color.color[:3])]],  # sort key
+                tuple(color.color)  # source color
+            ) for color in palette.colors], reverse=self.reverse
+        )
+
+        for new_index, (hsv, color) in enumerate(original_colors):
+            palette.colors[new_index].color = color
+
+        context.area.tag_redraw()
+
+        return {'FINISHED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'mode', expand=True)
+        layout.prop(self, 'reverse')
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=200)
+
+
 classes = (
+    CH_OT_add_collection,
+    CH_OT_remove_collection,
+
     CH_OT_add_palette,
     CH_OT_remove_palette,
 
