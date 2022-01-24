@@ -83,7 +83,7 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
             layout.operator('ch.create_ramp_from_palette', icon='COLORSET_08_VEC').palette_index = index
             layout.separator()
 
-            layout.operator('ch.copy_palette', icon='DUPLICATE')
+            layout.operator('ch.copy_palette', icon='DUPLICATE').palette_index = index
             layout.operator('ch.move_palette', icon='FORWARD').palette_index = index
             layout.separator()
 
