@@ -52,7 +52,7 @@ class CH_OT_add_collection(bpy.types.Operator):
     def execute(self, context):
         collection = context.scene.ch_palette_collection.add()
         collection.name = 'Collection' + str(len(context.scene.ch_palette_collection))
-
+        context.scene.ch_palette_collection_index = len(context.scene.ch_palette_collection) - 1
         return {'FINISHED'}
 
 
@@ -62,8 +62,12 @@ class CH_OT_remove_collection(bpy.types.Operator):
 
     collection_index: IntProperty()
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
     def execute(self, context):
         context.scene.ch_palette_collection.remove(self.collection_index)
+        context.scene.ch_palette_collection_index = 0 if self.collection_index - 1 <= 0 else self.collection_index - 1
 
         return {'FINISHED'}
 
