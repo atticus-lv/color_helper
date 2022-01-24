@@ -77,10 +77,12 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
 
         def draw_custom_menu(self, context):
             layout = self.layout
+            layout.operator_context = "INVOKE_DEFAULT"
 
             layout.operator('ch.copy_palette', icon='DUPLICATE')
             layout.operator('ch.move_palette', icon='FORWARD').palette_index = index
             layout.separator()
+
             layout.operator('ch.export_palette',
                             text='Make Palette Image',
                             icon='COLORSET_13_VEC'
@@ -159,6 +161,7 @@ class SidePanelBase:
                 row.separator()
 
                 row.operator('ch.sort_color', icon='SORTSIZE', text='').palette_index = i
+                row.operator('ch.hsv_palette', icon='MOD_HUE_SATURATION', text='').palette_index = i
                 row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
                 row.separator()
 
