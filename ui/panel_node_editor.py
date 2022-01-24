@@ -49,14 +49,14 @@ class CH_PT_collection_manager(bpy.types.Panel):
         layout = self.layout
 
         for i, item in enumerate(context.scene.ch_palette_collection):
-            row = layout.row()
+            row = layout.box().row()
             d = row.row()
             d.alert = True
             d.operator('ch.remove_collection', icon='X', text=''
                        ).collection_index = i
-            row.label(text=item.name)
+            row.prop(item, 'name', text='')
 
-        layout.box().operator('ch.add_collection', icon='ADD', text='New')
+        layout.box().operator('ch.add_collection', icon='ADD', text='New Collection', emboss=False)
 
 
 class CH_OT_palette_extra_op_caller(bpy.types.Operator):

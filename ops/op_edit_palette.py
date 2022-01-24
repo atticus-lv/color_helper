@@ -76,7 +76,7 @@ class CH_OT_remove_collection(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.ch_palette_collection.remove(self.collection_index)
-        context.scene.ch_palette_collection_index = 0 if self.collection_index - 1 <= 0 else self.collection_index - 1
+        context.scene.ch_palette_enum_collection = '0' if self.collection_index - 1 <= 0 else f'{self.collection_index - 1}'
 
         redraw_area()
 
