@@ -14,7 +14,7 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
     def poll(cls, context):
         return (
                 (context.area.ui_type == 'VIEW_3D') or
-                (context.area.ui_type == 'NODE_EDITOR' and
+                (hasattr(context.space_data, 'edit_tree') and
                  context.space_data.edit_tree and
                  context.space_data.edit_tree.bl_idname == 'ShaderNodeTree')
         )
