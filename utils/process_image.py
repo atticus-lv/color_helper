@@ -1,5 +1,5 @@
 import math
-from ..ops.op_export_palette import COLOR_WIDTH, COLOR_HEIGHT
+from ..ops.op_palette_export_ import COLOR_WIDTH, COLOR_HEIGHT
 
 
 def gamma_correct(c, gamma=2.4):

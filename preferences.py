@@ -19,7 +19,7 @@ def get_pref():
 
 
 def change_panel_category():
-    from .ui.panel_node_editor import ui_panel
+    from .ui.panel import ui_panel
 
     for panel in ui_panel:
         if "bl_rna" in panel.__dict__:

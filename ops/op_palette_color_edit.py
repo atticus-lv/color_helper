@@ -31,7 +31,6 @@ class CH_OT_shuffle_palette(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
 def register():
     bpy.utils.register_class(CH_OT_shuffle_palette)
 
