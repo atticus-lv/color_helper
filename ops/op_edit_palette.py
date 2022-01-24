@@ -58,7 +58,7 @@ class CH_OT_add_collection(bpy.types.Operator):
     def execute(self, context):
         collection = context.scene.ch_palette_collection.add()
         collection.name = 'Collection' + str(len(context.scene.ch_palette_collection))
-        context.scene.ch_palette_collection_index = len(context.scene.ch_palette_collection) - 1
+        context.scene.ch_palette_enum_collection = str(len(context.scene.ch_palette_collection) - 1)
 
         redraw_area()
 
