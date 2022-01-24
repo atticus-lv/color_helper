@@ -53,27 +53,44 @@ class CH_OT_export_palette(bpy.types.Operator):
 from bpy_extras.io_utils import ExportHelper
 
 
-class CH_OT_batch_export_palette(bpy.types.Operator):
+class CH_OT_batch_export_palette(bpy.types.Operator, ExportHelper):
     """Export all palette in this collection to your pref export path"""
     bl_idname = 'ch.batch_export_palette'
     bl_label = 'Export All Palette'
     bl_options = {"INTERNAL"}
 
-    collection_index: IntProperty()
+    collection_index: IntProperty(options={'HIDDEN'})
+    filename_ext = '.'
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self,event)
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = ""
+            else:
+                blend_filepath = os.path.dirname(os.path.splitext(blend_filepath)[0])
+
+            self.filepath = blend_filepath
+
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        from ..preferences import get_pref
-        directory = get_pref().directory
-        if not (os.path.exists(directory) and os.path.isdir(directory)):
-            self.report({"ERROR"}, 'Define your export dir in preference first!')
-            return {'CANCELLED'}
+        # from ..preferences import get_pref
+        # directory = get_pref().directory
+        # if not (os.path.exists(directory) and os.path.isdir(directory)):
+        #     self.report({"ERROR"}, 'Define your export dir in preference first!')
+        #     return {'CANCELLED'}
 
         collection = context.scene.ch_palette_collection[self.collection_index]
+
+        dir = os.path.join(os.path.dirname(self.filepath), collection.name)
+        if not os.path.exists(dir): os.mkdir(dir)
+
         for palette in collection.palettes:
-            filepath = os.path.join(self.directory, palette.name) + '.png'
+            filepath = os.path.join(dir, palette.name) + '.png'
             image = make_png_from_palette(palette, save_path=filepath)
             image.save()
             bpy.data.images.remove(image)
