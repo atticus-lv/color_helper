@@ -3,9 +3,17 @@ from bpy.props import *
 from bpy.types import PropertyGroup
 
 
+def update_color(self, context):
+    path = self.color.path_from_id().split('.colors')[0]
+    palette = eval('bpy.context.scene' + '.' + path)
+    index = int(palette.path_from_id().split('.palettes')[-1][1:-1])
+    if palette.node_group and palette.node_group_update:
+        bpy.ops.ch.create_nodes_from_palette('INVOKE_DEFAULT', palette_index=index)
+
+
 class PaletteColorProps(PropertyGroup):
     color: FloatVectorProperty(
-        subtype='COLOR', name='', min=0.0, max=1.0, size=4)
+        subtype='COLOR', name='', min=0.0, max=1.0, size=4, update=update_color)
 
 
 def poll_shader_tree(self, object):
@@ -28,9 +36,8 @@ class PaletteProps(PropertyGroup):
     name: StringProperty(name='Name')
     colors: CollectionProperty(type=PaletteColorProps)
     # bind
-
-    node_group: PointerProperty(type=bpy.types.NodeTree, poll=poll_shader_tree)
-
+    node_group: PointerProperty(name='Node Group', type=bpy.types.NodeTree, poll=poll_shader_tree)
+    node_group_update: BoolProperty('Update Node Group', default=False)
     # UI
     edit_mode: BoolProperty(name='Edit', default=False)
 

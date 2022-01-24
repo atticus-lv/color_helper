@@ -55,7 +55,7 @@ class CH_PT_collection_manager(bpy.types.Panel):
             d.operator('ch.remove_collection', icon='X', text=''
                        ).collection_index = i
             row.prop(item, 'name', text='')
-            row.operator('ch.batch_export_palette', icon='EXPORT',text = '').collection_index = i
+            row.operator('ch.batch_export_palette', icon='EXPORT', text='').collection_index = i
 
         layout.box().operator('ch.add_collection', icon='ADD', text='New Collection', emboss=False)
 
@@ -172,8 +172,12 @@ class SidePanelBase:
 
                 row.prop(palette, 'node_group', text='')
                 node_icon = 'ADD' if not palette.node_group else 'FILE_REFRESH'
-                row.operator('ch.create_nodes_from_palette',
+
+                sub = row.row()
+                sub.alert = True if palette.node_group_update is True else False
+                sub.operator('ch.create_nodes_from_palette',
                              icon=node_icon, text='').palette_index = i
+
                 row.separator()
 
                 row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i

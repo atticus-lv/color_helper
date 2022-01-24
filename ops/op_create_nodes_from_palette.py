@@ -4,7 +4,7 @@ from bpy.props import EnumProperty, IntProperty, BoolProperty
 
 
 class CH_OT_create_nodes_from_palette(bpy.types.Operator):
-    """Create/Update shader node group from this palette\nShift to create/update and add group node to current material"""
+    """Create/Update shader node group from this palette\nShift to add group node to current material\nCtrl to toggle auto update"""
     bl_idname = 'ch.create_nodes_from_palette'
     bl_label = 'Create Color From Palette'
 
@@ -30,6 +30,9 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
     def invoke(self, context, event):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         palette = collection.palettes[self.palette_index]
+        if event.ctrl:
+            palette.node_group_update = False if palette.node_group_update == True else True
+            context.area.tag_redraw()
         self.create_node_group(palette, create=event.shift)
         return {'FINISHED'}
 
