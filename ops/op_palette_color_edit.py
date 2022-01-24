@@ -45,6 +45,7 @@ class TempColorProps(PropertyGroup):
         subtype='COLOR', name='', min=0.0, max=1.0, size=4)
 
 
+
 def update_hsv(self, context):
     src_palette = get_active_palette(self.palette_index)
 
@@ -55,7 +56,7 @@ def update_hsv(self, context):
     new_colors_rgba = list()
 
     for hsv in src_colors_hsv:
-        h = min(max(hsv[0] + self.offset_h if self.offset_h > 0 else hsv[0] - self.offset_h, 0), 1)
+        h = (hsv[0] + self.offset_h) % 1
         s = min(max(hsv[1] + self.offset_s, 0), 1)
         v = min(max(hsv[2] + self.offset_v, 0), 1)
         r, g, b = colorsys.hsv_to_rgb(h, s if hsv[1] != 0 else 0, v)
@@ -85,6 +86,8 @@ class CH_OT_hsv_palette(bpy.types.Operator):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         self.src_palette = collection.palettes[self.palette_index]
 
+        self.temp_colors.clear()
+
         for color_item in self.src_palette.colors:
             clr = self.temp_colors.add()
             clr.color = color_item.color
@@ -109,9 +112,13 @@ class CH_OT_hsv_palette(bpy.types.Operator):
         col.prop(self, 'offset_s', slider=True)
         col.prop(self, 'offset_v', slider=True)
 
-    def execute(self, context):
+
+    def apply_color(self):
         for i, color_item in enumerate(self.src_palette.colors):
             color_item.color = self.temp_colors[i].color
+
+    def execute(self, context):
+        self.apply_color()
 
         from .op_palette_manage import redraw_area
         redraw_area()
@@ -135,6 +142,7 @@ def update_sort(self, context):
         self.temp_colors[new_index].color = color
 
 
+
 class CH_OT_sort_color(bpy.types.Operator):
     bl_idname = 'ch.sort_color'
     bl_label = 'Sort Color'
@@ -154,9 +162,12 @@ class CH_OT_sort_color(bpy.types.Operator):
 
     reverse: BoolProperty(name='Reverse', default=False, update=update_sort)
 
-    def execute(self, context):
+    def apply_color(self):
         for i, color_item in enumerate(self.src_palette.colors):
             color_item.color = self.temp_colors[i].color
+
+    def execute(self, context):
+        self.apply_color()
 
         from .op_palette_manage import redraw_area
         redraw_area()
@@ -180,9 +191,13 @@ class CH_OT_sort_color(bpy.types.Operator):
         col.prop(self, 'mode', expand=True)
         col.prop(self, 'reverse')
 
+        layout.prop(self, 'auto_apply')
+
     def invoke(self, context, event):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         self.src_palette = collection.palettes[self.palette_index]
+
+        self.temp_colors.clear()
 
         for color_item in self.src_palette.colors:
             clr = self.temp_colors.add()
