@@ -45,7 +45,6 @@ class TempColorProps(PropertyGroup):
         subtype='COLOR', name='', min=0.0, max=1.0, size=4)
 
 
-
 def update_hsv(self, context):
     src_palette = get_active_palette(self.palette_index)
 
@@ -87,6 +86,7 @@ class CH_OT_hsv_palette(bpy.types.Operator):
         self.src_palette = collection.palettes[self.palette_index]
 
         self.temp_colors.clear()
+        self.offset_h = self.offset_v = self.offset_s = 0
 
         for color_item in self.src_palette.colors:
             clr = self.temp_colors.add()
@@ -111,7 +111,6 @@ class CH_OT_hsv_palette(bpy.types.Operator):
         col.prop(self, 'offset_h', slider=True)
         col.prop(self, 'offset_s', slider=True)
         col.prop(self, 'offset_v', slider=True)
-
 
     def apply_color(self):
         for i, color_item in enumerate(self.src_palette.colors):
@@ -140,7 +139,6 @@ def update_sort(self, context):
 
     for new_index, (hsv, color) in enumerate(original_colors):
         self.temp_colors[new_index].color = color
-
 
 
 class CH_OT_sort_color(bpy.types.Operator):
@@ -198,6 +196,7 @@ class CH_OT_sort_color(bpy.types.Operator):
         self.src_palette = collection.palettes[self.palette_index]
 
         self.temp_colors.clear()
+        self.offset_h = self.offset_v = self.offset_s = 0
 
         for color_item in self.src_palette.colors:
             clr = self.temp_colors.add()
