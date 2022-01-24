@@ -55,12 +55,12 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
 
         node_output.location = len(palette.colors) * 150 + 200, 0
 
-        loc_x, loc_y = bpy.context.space_data.cursor_location
-        bpy.ops.node.select_all(action='DESELECT')
-
         # # Create Node Group
         if bpy.context.area.ui_type != 'NODE_EDITOR': return
         if bpy.context.space_data.edit_tree is None or not create: return
+
+        loc_x, loc_y = bpy.context.space_data.cursor_location
+        bpy.ops.node.select_all(action='DESELECT')
 
         edit_tree = bpy.context.space_data.edit_tree
 
