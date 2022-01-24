@@ -7,8 +7,10 @@ class PaletteColorProps(PropertyGroup):
     color: FloatVectorProperty(
         subtype='COLOR', name='', min=0.0, max=1.0, size=4)
 
-def poll_shader_tree(self,object):
+
+def poll_shader_tree(self, object):
     return object.bl_idname == 'ShaderNodeTree'
+
 
 class PaletteProps(PropertyGroup):
     # def get_name(self):
@@ -27,7 +29,7 @@ class PaletteProps(PropertyGroup):
     colors: CollectionProperty(type=PaletteColorProps)
     # bind
 
-    node_group:PointerProperty(type = bpy.types.NodeTree,poll = poll_shader_tree)
+    node_group: PointerProperty(type=bpy.types.NodeTree, poll=poll_shader_tree)
 
     # UI
     edit_mode: BoolProperty(name='Edit', default=False)
@@ -47,12 +49,24 @@ classes = (
 )
 
 
+def enum_collection_callback(self, context):
+    return [(f'{i}', collection.name, '') for i, collection in enumerate(context.scene.ch_palette_collection)]
+
+
+def update_enum_collection(self, context):
+    setattr(context.scene, 'ch_palette_collection_index', int(context.scene.ch_palette_enum_collection))
+
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.ch_palette_collection = CollectionProperty(type=PaletteCollectionProps)
     bpy.types.Scene.ch_palette_collection_index = IntProperty()
+    # UI
+    bpy.types.Scene.ch_palette_enum_collection = EnumProperty(name='Color Collection',
+                                                              items=enum_collection_callback,
+                                                              update=update_enum_collection)
 
 
 def unregister():

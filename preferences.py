@@ -75,7 +75,10 @@ def load_asset():
                 bpy.data.images.remove(image)
 
         if len(coll_item.palettes) == 0: bpy.context.scene.ch_palette_collection.remove(-1)
-
+    # redraw
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            area.tag_redraw()
 
 def update_asset(self, context):
     load_asset()

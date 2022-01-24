@@ -2,6 +2,12 @@ import bpy
 from bpy.props import *
 
 
+def get_coll_active():
+    collection = bpy.context.scene.ch_palette_collection[bpy.context.scene.ch_palette_collection_index]
+
+    return collection
+
+
 class CH_OT_select_collection(bpy.types.Operator):
     bl_idname = "ch.select_collection"
     bl_label = 'Select'
@@ -28,11 +34,64 @@ class CH_MT_collection_switcher(bpy.types.Menu):
         for i, item in enumerate(context.scene.ch_palette_collection):
             row = layout.row()
 
-
             row.operator("ch.select_collection", text=item.name).index = i
 
         layout.separator()
         layout.label(text='Select Collection')
+
+
+class CH_PT_collection_manager(bpy.types.Panel):
+    bl_label = "Collection Manager"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'HEADER'
+
+    def draw(self, context):
+        layout = self.layout
+
+        for i, item in enumerate(context.scene.ch_palette_collection):
+            row = layout.row()
+            d = row.row()
+            d.alert = True
+            d.operator('ch.remove_collection', icon='X', text=''
+                       ).collection_index = i
+            row.label(text=item.name)
+
+        layout.box().operator('ch.add_collection', icon='ADD', text='New')
+
+
+class CH_OT_palette_extra_op_caller(bpy.types.Operator):
+    bl_label = "Extra"
+    bl_idname = 'ch.palette_extra_op_caller'
+
+    collection_index: IntProperty()
+    palette_index: IntProperty()
+
+    @classmethod
+    def poll(self, context):
+        return len(context.scene.ch_palette_collection) != 0
+
+    def invoke(self, context, event):
+        coll = get_coll_active()
+        index = self.palette_index
+        title = f'{coll.palettes[index].name}'
+
+        def draw_custom_menu(self, context):
+            layout = self.layout
+
+            layout.operator('ch.copy_palette', icon='DUPLICATE')
+            layout.operator('ch.move_palette', icon='FORWARD').palette_index = index
+            layout.separator()
+            layout.operator('ch.export_palette',
+                            text='Make Palette Image',
+                            icon='COLORSET_13_VEC'
+                            ).palette_index = index
+
+            layout.separator()
+            layout.operator('ch.remove_palette', text='Remove', icon='X').palette_index = index
+
+        context.window_manager.popup_menu(draw_custom_menu, title=title, icon='COLLAPSEMENU')
+
+        return {"FINISHED"}
 
 
 class SidePanelBase:
@@ -40,6 +99,7 @@ class SidePanelBase:
     bl_category = 'CH'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     @classmethod
     def poll(self, context):
@@ -49,6 +109,12 @@ class SidePanelBase:
                  context.space_data.edit_tree and
                  context.space_data.edit_tree.bl_idname == 'ShaderNodeTree')
         )
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.alignment = "RIGHT"
+        layout.operator('ch.load_asset', icon='COLOR')
+        layout.separator()
 
     def draw_palette_color(self, layout, palette, palette_index):
         row = layout.row(align=True)
@@ -68,6 +134,7 @@ class SidePanelBase:
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
 
     def draw_ui(self, context, layout):
+
         if len(context.scene.ch_palette_collection) != 0:
             collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
 
@@ -76,22 +143,17 @@ class SidePanelBase:
             row.scale_x = 1.5
             row.alignment = "RIGHT"
             row.separator()
-            row.menu('CH_MT_collection_switcher', text=collection.name, icon='COLOR')
+            row.prop(context.scene, 'ch_palette_enum_collection', text='', icon='COLOR')
 
             row = row.row()
             row.scale_x = 0.9
-            row.operator('ch.remove_collection', icon='X',text = ''
-                         ).collection_index = context.scene.ch_palette_collection_index
+            row.popover(panel='CH_PT_collection_manager', icon='PREFERENCES', text='')
 
             for i, palette in enumerate(collection.palettes):
                 col = layout.column().box()
+                row.operator_context = "INVOKE_DEFAULT"
 
                 row = col.row(align=True)
-
-                if palette.edit_mode:
-                    row_alert = row.row()
-                    row_alert.alert = True
-                    row_alert.operator('ch.remove_palette', icon='X', text='').palette_index = i
 
                 row.prop(palette, 'name', text='')
                 row.separator()
@@ -106,20 +168,19 @@ class SidePanelBase:
                              icon=node_icon, text='').palette_index = i
                 row.separator()
 
-                row.operator('ch.export_palette', icon='IMAGE_ZDEPTH', text='').palette_index = i
+                row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i
 
                 row = col.row()
                 self.draw_palette_color(row, palette, i)
 
         col = layout.column()
         col.scale_y = col.scale_x = 1.25
+
+        col.box().operator('ch.add_palette', icon='ADD', emboss=False)
+
         row = col.row()
-        row.operator('ch.add_palette', icon='ADD')
         row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC')
         row.operator('ch.create_palette_from_clipboard', icon='PASTEDOWN')
-
-        col.separator()
-        col.operator('ch.load_asset', icon='COLOR')
 
     def draw(self, context):
         layout = self.layout
@@ -173,6 +234,8 @@ ui_panel = (
 def register():
     bpy.utils.register_class(CH_OT_select_collection)
     bpy.utils.register_class(CH_MT_collection_switcher)
+    bpy.utils.register_class(CH_PT_collection_manager)
+    bpy.utils.register_class(CH_OT_palette_extra_op_caller)
     bpy.utils.register_class(CH_PT_node_editor)
     bpy.utils.register_class(CH_MT_pop_menu)
 
@@ -182,6 +245,8 @@ def register():
 def unregister():
     bpy.utils.unregister_class(CH_OT_select_collection)
     bpy.utils.unregister_class(CH_MT_collection_switcher)
+    bpy.utils.unregister_class(CH_PT_collection_manager)
+    bpy.utils.unregister_class(CH_OT_palette_extra_op_caller)
     bpy.utils.unregister_class(CH_PT_node_editor)
     bpy.utils.unregister_class(CH_MT_pop_menu)
 
