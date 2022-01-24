@@ -216,8 +216,17 @@ class CH_OT_add_color(bpy.types.Operator):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         palette = collection.palettes[self.palette_index]
 
+        if len(palette.colors) == 0:
+            new_clr = (0.8, 0.8, 0.8, 1)
+        else:
+            pre_clr = palette.colors[-1].color
+            new_clr = (pre_clr[0] - 0.2 if pre_clr[0] >= 0.2 else 0,
+                       pre_clr[1] - 0.2 if pre_clr[1] >= 0.2 else 0,
+                       pre_clr[2] - 0.2 if pre_clr[2] >= 0.2 else 0,
+                       pre_clr[3])
+
         item = palette.colors.add()
-        item.color = (0.8, 0.8, 0.8, 1)
+        item.color = new_clr
 
         redraw_area()
 

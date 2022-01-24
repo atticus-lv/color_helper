@@ -89,7 +89,7 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
             layout.separator()
             layout.operator('ch.remove_palette', text='Remove', icon='X').palette_index = index
 
-        context.window_manager.popup_menu(draw_custom_menu, title=title, icon='COLLAPSEMENU')
+        context.window_manager.popup_menu(draw_custom_menu, title=title)
 
         return {"FINISHED"}
 
@@ -129,7 +129,7 @@ class SidePanelBase:
                 remove.palette_index = palette_index
                 remove.color_index = i
 
-        row.operator('ch.add_color', icon='ADD', text='').palette_index = palette_index
+        row.operator('ch.add_color', icon='ADD', text='' if len(palette.colors)!=0 else 'Add Color').palette_index = palette_index
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
 
