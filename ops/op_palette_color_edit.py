@@ -55,10 +55,10 @@ def update_hsv(self, context):
     new_colors_rgba = list()
 
     for hsv in src_colors_hsv:
-        h = min(max(hsv[0] + self.offset_h - 0.5, 0), 1)
-        s = min(max(hsv[1] + self.offset_s - 1, 0), 2)
-        v = min(max(hsv[2] + self.offset_v - 1, 0), 2)
-        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        h = min(max(hsv[0] + self.offset_h if self.offset_h > 0 else hsv[0] - self.offset_h, 0), 1)
+        s = min(max(hsv[1] + self.offset_s, 0), 1)
+        v = min(max(hsv[2] + self.offset_v, 0), 1)
+        r, g, b = colorsys.hsv_to_rgb(h, s if hsv[1] != 0 else 0, v)
         new_colors_rgba.append((r, g, b, 1))
 
     for i, color_item in enumerate(self.temp_colors):
@@ -77,9 +77,9 @@ class CH_OT_hsv_palette(bpy.types.Operator):
     temp_colors: CollectionProperty(type=TempColorProps)
     src_palette = None
 
-    offset_h: FloatProperty(name='Hue', default=0.5, max=1, min=0, update=update_hsv)
-    offset_s: FloatProperty(name='Saturation', default=1, max=2, min=0, update=update_hsv)
-    offset_v: FloatProperty(name='Value', default=1, max=2, min=0, update=update_hsv)
+    offset_h: FloatProperty(name='Hue', default=0, max=0.5, min=-0.5, update=update_hsv)
+    offset_s: FloatProperty(name='Saturation', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
+    offset_v: FloatProperty(name='Value', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
 
     def invoke(self, context, event):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
@@ -105,9 +105,9 @@ class CH_OT_hsv_palette(bpy.types.Operator):
         col.use_property_split = True
         col.use_property_decorate = False
 
-        col.prop(self, 'offset_h')
-        col.prop(self, 'offset_s')
-        col.prop(self, 'offset_v')
+        col.prop(self, 'offset_h', slider=True)
+        col.prop(self, 'offset_s', slider=True)
+        col.prop(self, 'offset_v', slider=True)
 
     def execute(self, context):
         for i, color_item in enumerate(self.src_palette.colors):
