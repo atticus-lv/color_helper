@@ -54,9 +54,15 @@ from bpy_extras.io_utils import ExportHelper
 
 
 class CH_OT_batch_export_palette(bpy.types.Operator):
+    """Export all palette in this collection to your pref export path"""
     bl_idname = 'ch.batch_export_palette'
-    bl_label = 'Export Collection Palette'
-    bl_options = {"REGISTER", "UNDO"}
+    bl_label = 'Export All Palette'
+    bl_options = {"INTERNAL"}
+
+    collection_index: IntProperty()
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self,event)
 
     def execute(self, context):
         from ..preferences import get_pref
@@ -65,7 +71,7 @@ class CH_OT_batch_export_palette(bpy.types.Operator):
             self.report({"ERROR"}, 'Define your export dir in preference first!')
             return {'CANCELLED'}
 
-        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        collection = context.scene.ch_palette_collection[self.collection_index]
         for palette in collection.palettes:
             filepath = os.path.join(self.directory, palette.name) + '.png'
             image = make_png_from_palette(palette, save_path=filepath)

@@ -55,6 +55,7 @@ class CH_PT_collection_manager(bpy.types.Panel):
             d.operator('ch.remove_collection', icon='X', text=''
                        ).collection_index = i
             row.prop(item, 'name', text='')
+            row.operator('ch.batch_export_palette', icon='EXPORT',text = '').collection_index = i
 
         layout.box().operator('ch.add_collection', icon='ADD', text='New Collection', emboss=False)
 
