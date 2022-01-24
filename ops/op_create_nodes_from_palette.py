@@ -68,7 +68,7 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
                                     getattr(edit_tree.nodes.active, 'node_tree') == nt):
             group_node = edit_tree.nodes.new('ShaderNodeGroup')
             group_node.node_tree = nt
-            group_node.location = loc_x, loc_y
+            group_node.location = loc_x - bpy.context.region.width, loc_y
 
             bpy.ops.transform.translate('INVOKE_DEFAULT')
 
@@ -89,6 +89,8 @@ class CH_OT_create_ramp_from_palette(bpy.types.Operator):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         palette = collection.palettes[self.palette_index]
 
+        loc_x, loc_y = context.space_data.cursor_location
+
         if len(palette.colors) == 0: return {'CANCELLED'}
 
         nt = bpy.context.space_data.edit_tree
@@ -96,7 +98,7 @@ class CH_OT_create_ramp_from_palette(bpy.types.Operator):
         bpy.ops.node.select_all(action='DESELECT')
 
         node_ramp = nt.nodes.new(type="ShaderNodeValToRGB")
-        node_ramp.location = context.space_data.cursor_location
+        node_ramp.location = loc_x - context.region.width, loc_y
         node_ramp.color_ramp.elements.remove(node_ramp.color_ramp.elements[0])
         node_ramp.color_ramp.elements[0].position = 0
 
