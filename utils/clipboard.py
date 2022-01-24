@@ -20,8 +20,17 @@ def get_dir():
 class Clipboard():
 
     def __init__(self, file_urls=None):
-        if sys.platform not in {'win32'}:
+        if sys.platform not in {'win32','darwin'}:
             raise EnvironmentError
+
+    # mac
+    def get_osascript_args(self,commands):
+        args = ["osascript"]
+        for command in commands:
+            args += ["-e", command]
+        return args
+
+    #
 
     def get_args(self, script):
         powershell_args = [
@@ -61,14 +70,28 @@ class Clipboard():
         return popen, stdout, stderr
 
 
+
     def pull_image_from_clipboard(self,save_name = 'ch_cache_image.png'):
         filepath = os.path.join(get_dir(),save_name)
-        image_script = (
-                    "$image = Get-Clipboard -Format Image; "
-                    f"if ($image) {{ $image.Save('{filepath}'); Write-Output 0 }}"
-                )
+        if sys.platform == 'win32':
+            image_script = (
+                        "$image = Get-Clipboard -Format Image; "
+                        f"if ($image) {{ $image.Save('{filepath}'); Write-Output 0 }}"
+                    )
 
-        popen, stdout, stderr = self.execute_powershell(image_script)
+            popen, stdout, stderr = self.execute_powershell(image_script)
+        elif sys.platform == 'darwin':
+            commands = [
+                "set pastedImage to "
+                f'(open for access POSIX file "{filepath}" with write permission)',
+                "try",
+                "    write (the clipboard as «class PNGf») to pastedImage",
+                "end try",
+                "close access pastedImage",
+            ]
+            popen = subprocess.Popen(self.get_osascript_args(commands))
+            stdout, stderr = popen.communicate()
+
         # print(filepath, stdout, stderr)
         return filepath
 
