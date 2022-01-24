@@ -18,17 +18,21 @@ def get_pref():
     return bpy.context.preferences.addons.get(__folder_name__).preferences
 
 
-def update_category(self, context):
+def change_panel_category():
     from .ui.panel_node_editor import ui_panel
 
-    try:
-        for panel in ui_panel:
-            if "bl_rna" in panel.__dict__:
-                bpy.utils.unregister_class(panel)
+    for panel in ui_panel:
+        if "bl_rna" in panel.__dict__:
+            bpy.utils.unregister_class(panel)
 
-        for panel in ui_panel:
-            panel.bl_category = get_pref().category
-            bpy.utils.register_class(panel)
+    for panel in ui_panel:
+        panel.bl_category = get_pref().category
+        bpy.utils.register_class(panel)
+
+
+def update_category(self, context):
+    try:
+        change_panel_category()
 
     except(Exception) as e:
         self.report({'ERROR'}, f'Category change failed:\n{e}')
@@ -39,7 +43,7 @@ def load_asset():
     from .utils.process_image import extract_from_palette
 
     base_dir = get_pref().asset_lib
-    print(base_dir)
+    print('Load Color Helper Asset: ', base_dir)
     if not (os.path.exists(base_dir) and os.path.isdir(base_dir)): return
 
     for file in os.listdir(base_dir):
@@ -80,7 +84,7 @@ def update_asset(self, context):
 class CH_Preference(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    category: StringProperty(name="Category", default="SPIO", update=update_category)
+    category: StringProperty(name="Category", default="CH", update=update_category)
     directory: StringProperty(name='Export Directory', subtype='DIR_PATH')
 
     asset_lib: StringProperty(name='Asset Library', subtype='DIR_PATH', update=update_asset)
@@ -141,6 +145,12 @@ def register():
 
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    try:
+        change_panel_category()
+
+    except(Exception) as e:
+        print(e)
 
 
 def unregister():

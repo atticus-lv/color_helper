@@ -26,17 +26,19 @@ class CH_MT_collection_switcher(bpy.types.Menu):
         layout = self.layout
 
         for i, item in enumerate(context.scene.ch_palette_collection):
-            layout.operator("ch.select_collection", text=item.name).index = i
+            row = layout.row()
+
+
+            row.operator("ch.select_collection", text=item.name).index = i
 
         layout.separator()
         layout.label(text='Select Collection')
 
 
-class CH_PT_node_editor(bpy.types.Panel):
-    bl_idname = 'CH_PT_node_editor'
+class SidePanelBase:
     bl_label = 'Color Helper'
-    bl_category = 'Node'
-    bl_space_type = 'NODE_EDITOR'
+    bl_category = 'CH'
+    bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
 
     @classmethod
@@ -55,7 +57,9 @@ class CH_PT_node_editor(bpy.types.Panel):
             col = row.column(align=True)
             col.prop(color, 'color')
             if palette.edit_mode:
-                remove = col.operator('ch.remove_color', icon='REMOVE', text='')
+                r = col.column(align=True)
+                r.scale_y = 0.75
+                remove = r.operator('ch.remove_color', icon='REMOVE', text='')
                 remove.palette_index = palette_index
                 remove.color_index = i
 
@@ -69,14 +73,15 @@ class CH_PT_node_editor(bpy.types.Panel):
 
             row = layout.row()
             row.scale_y = 1.25
-            row.scale_x = 1.25
+            row.scale_x = 1.5
+            row.alignment = "RIGHT"
             row.separator()
             row.menu('CH_MT_collection_switcher', text=collection.name, icon='COLOR')
 
-            d = row.row(align=True)
-            d.alert = True
-            d.operator('ch.remove_collection', icon='X',
-                       text='').collection_index = context.scene.ch_palette_collection_index
+            row = row.row()
+            row.scale_x = 0.9
+            row.operator('ch.remove_collection', icon='X',text = ''
+                         ).collection_index = context.scene.ch_palette_collection_index
 
             for i, palette in enumerate(collection.palettes):
                 col = layout.column().box()
@@ -122,6 +127,16 @@ class CH_PT_node_editor(bpy.types.Panel):
         self.draw_ui(context, layout)
 
 
+class CH_PT_3d_view(SidePanelBase, bpy.types.Panel):
+    bl_idname = 'CH_PT_3d_view'
+    bl_space_type = 'VIEW_3D'
+
+
+class CH_PT_node_editor(SidePanelBase, bpy.types.Panel):
+    bl_idname = 'CH_PT_node_editor'
+    bl_space_type = 'NODE_EDITOR'
+
+
 class CH_MT_pop_menu(bpy.types.Menu):
     bl_label = "Color Helper"
     bl_idname = "CH_MT_pop_menu"
@@ -142,8 +157,16 @@ class CH_MT_pop_menu(bpy.types.Menu):
         pie.popover(panel='CH_PT_node_editor')
 
 
+def draw_tool_bar(self, context):
+    layout = self.layout
+    col = layout.column()
+    col.scale_y = 2
+    col.popover(panel='CH_PT_node_editor', text='', icon='COLOR')
+
+
 ui_panel = (
-    CH_PT_node_editor
+    CH_PT_node_editor,
+    CH_PT_3d_view,
 )
 
 
@@ -153,9 +176,13 @@ def register():
     bpy.utils.register_class(CH_PT_node_editor)
     bpy.utils.register_class(CH_MT_pop_menu)
 
+    # bpy.types.VIEW3D_PT_tools_active.append(draw_tool_bar)
+
 
 def unregister():
     bpy.utils.unregister_class(CH_OT_select_collection)
     bpy.utils.unregister_class(CH_MT_collection_switcher)
     bpy.utils.unregister_class(CH_PT_node_editor)
     bpy.utils.unregister_class(CH_MT_pop_menu)
+
+    # bpy.types.VIEW3D_PT_tools_active.remove(draw_tool_bar)
