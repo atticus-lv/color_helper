@@ -79,6 +79,9 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
             layout = self.layout
             layout.operator_context = "INVOKE_DEFAULT"
 
+            layout.operator('ch.create_ramp_from_palette', icon='COLORSET_08_VEC').palette_index = index
+            layout.separator()
+
             layout.operator('ch.copy_palette', icon='DUPLICATE')
             layout.operator('ch.move_palette', icon='FORWARD').palette_index = index
             layout.separator()
@@ -131,7 +134,8 @@ class SidePanelBase:
                 remove.palette_index = palette_index
                 remove.color_index = i
 
-        row.operator('ch.add_color', icon='ADD', text='' if len(palette.colors)!=0 else 'Add Color').palette_index = palette_index
+        row.operator('ch.add_color', icon='ADD',
+                     text='' if len(palette.colors) != 0 else 'Add Color').palette_index = palette_index
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
 
