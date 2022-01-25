@@ -1,23 +1,5 @@
-import math
 from ..ops.op_palette_export_ import COLOR_WIDTH, COLOR_HEIGHT
-
-
-def gamma_correct(c, gamma=2.4):
-    if c < 0:
-        return 0
-    elif c < 0.04045:
-        return c / 12.92
-    else:
-        return ((c + 0.055) / 1.055) ** gamma
-
-
-def gamma_invert(c, gamma_value=2.4):
-    if c < 0.0031308:
-        srgb = 0.0 if c < 0.0 else c * 12.92
-    else:
-        srgb = 1.055 * math.pow(c, 1.0 / gamma_value) - 0.055
-
-    return srgb
+from .color_correct import srgb_2_linear, linear_2_srgb
 
 
 def round_color_tuple(color_tuple, precision=4):
@@ -67,7 +49,7 @@ def extract_from_palette(image):
         return round_color_tuple(pixels[start_index:start_index + channel_count])
 
     colors = [get_color(x=start_pixel + i * COLOR_WIDTH) for i in range(len_colors)]
-    colors[:] = [[gamma_correct(c) for c in color] for color in colors]
+    colors[:] = [[srgb_2_linear(c) for c in color] for color in colors]
 
     return colors
 
@@ -128,7 +110,7 @@ class PixelIterator:
 
     def get_color(self, start_index):
         r, g, b, *a = self.pixels[start_index:start_index + self.channel_count]
-        r, g, b = [gamma_correct(c) for c in (r, g, b)]
+        r, g, b = [srgb_2_linear(c) for c in (r, g, b)]
         # a is a list of length 0 (when there are 3 channels) or length 1 (when there are 4 channels).
         a = a[0] if len(a) == 1 else 1  # use 1 as the default value for every pixel when there are 3 channels
         return round_color_tuple((r, g, b, a))
