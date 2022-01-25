@@ -7,8 +7,8 @@ COLOR_HEIGHT = 50
 
 
 def make_png_from_palette(palette, save_path=None):
-    from ..utils.process_image import gamma_invert
-    colors = [[gamma_invert(c) for c in color.color] for color in palette.colors]
+    from ..utils.process_image import linear_2_srgb
+    colors = [[linear_2_srgb(c) for c in color.color] for color in palette.colors]
 
     pixels = []
     for color in colors:

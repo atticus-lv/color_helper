@@ -6,7 +6,7 @@ from bpy.props import EnumProperty, IntProperty, BoolProperty
 class CH_OT_create_nodes_from_palette(bpy.types.Operator):
     """Create/Update shader node group from this palette\nShift to add group node to current material\nCtrl to toggle auto update"""
     bl_idname = 'ch.create_nodes_from_palette'
-    bl_label = 'Create Color From Palette'
+    bl_label = 'Create Node Group From Palette'
 
     palette_index: IntProperty()
 
