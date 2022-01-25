@@ -81,18 +81,21 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
             layout.operator_context = "INVOKE_DEFAULT"
 
             layout.operator('ch.create_ramp_from_palette', icon='COLORSET_08_VEC').palette_index = index
-            layout.separator()
-
-            layout.operator('ch.copy_palette', icon='DUPLICATE').palette_index = index
-            layout.operator('ch.move_palette', icon='FORWARD').palette_index = index
-            layout.separator()
-
             layout.operator('ch.export_palette',
-                            text='Make Palette Image',
+                            text='Create Palette Image',
                             icon='COLORSET_13_VEC'
                             ).palette_index = index
 
             layout.separator()
+
+            layout.operator('ch.copy_palette', icon='DUPLICATE').palette_index = index
+            layout.separator()
+
+            layout.operator('ch.move_palette_up', icon='TRIA_UP').palette_index = index
+            layout.operator('ch.move_palette_down', icon='TRIA_DOWN').palette_index = index
+            layout.operator('ch.move_palette_to_collection', icon='COLOR').palette_index = index
+            layout.separator()
+
             layout.operator('ch.remove_palette', text='Remove', icon='X').palette_index = index
 
         context.window_manager.popup_menu(draw_custom_menu, title=title)
@@ -135,6 +138,8 @@ class SidePanelBase:
                 remove.palette_index = palette_index
                 remove.color_index = i
 
+        if palette.hide: return
+        # extra
         row.operator('ch.add_color', icon='ADD',
                      text='' if len(palette.colors) != 0 else 'Add Color').palette_index = palette_index
         row.separator()
@@ -162,28 +167,36 @@ class SidePanelBase:
 
                 row = col.row(align=True)
 
-                row.prop(palette, 'name', text='')
-                row.separator()
+                row.prop(palette, 'hide', text='', icon='TRIA_RIGHT' if palette.hide else 'TRIA_DOWN', emboss=False)
+                if palette.hide:
+                    row.label(text=palette.name)
+                    row.separator()
+                    row = row.row()
+                    row.scale_y = 0.75
+                    self.draw_palette_color(row, palette, i)
+                else:
+                    row.prop(palette, 'name', text='')
+                    row.separator()
 
-                row.operator('ch.sort_color', icon='SORTSIZE', text='').palette_index = i
-                row.operator('ch.hsv_palette', icon='MOD_HUE_SATURATION', text='').palette_index = i
-                row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
-                row.separator()
+                    row.operator('ch.sort_color', icon='SORTSIZE', text='').palette_index = i
+                    row.operator('ch.hsv_palette', icon='MOD_HUE_SATURATION', text='').palette_index = i
+                    row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
+                    row.separator()
 
-                row.prop(palette, 'node_group', text='')
-                node_icon = 'ADD' if not palette.node_group else 'FILE_REFRESH'
+                    row.prop(palette, 'node_group', text='')
+                    node_icon = 'ADD' if not palette.node_group else 'FILE_REFRESH'
 
-                sub = row.row()
-                sub.alert = True if palette.node_group_update is True else False
-                sub.operator('ch.create_nodes_from_palette',
-                             icon=node_icon, text='').palette_index = i
+                    sub = row.row()
+                    sub.alert = True if palette.node_group_update is True else False
+                    sub.operator('ch.create_nodes_from_palette',
+                                 icon=node_icon, text='').palette_index = i
 
-                row.separator()
+                    row.separator()
 
-                row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i
+                    row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i
 
-                row = col.row()
-                self.draw_palette_color(row, palette, i)
+                    row = col.row()
+                    self.draw_palette_color(row, palette, i)
 
         col = layout.column()
         col.scale_y = col.scale_x = 1.25

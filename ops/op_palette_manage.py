@@ -101,8 +101,39 @@ class CH_OT_copy_palette(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class CH_PT_move_palette(bpy.types.Operator):
-    bl_idname = 'ch.move_palette'
+class CH_PT_move_palette():
+    palette_index: IntProperty()
+    action = None
+
+    def execute(self, context):
+        active_coll = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        active_index = self.palette_index
+
+        my_list = active_coll.palettes
+        index = active_index
+        neighbor = index + (-1 if self.action == 'UP' else 1)
+        my_list.move(neighbor, index)
+
+        redraw_area()
+        return {'FINISHED'}
+
+
+class CH_PT_move_palette_up(CH_PT_move_palette, bpy.types.Operator):
+    bl_idname = 'ch.move_palette_up'
+    bl_label = 'Move Up'
+
+    action = 'UP'
+
+
+class CH_PT_move_palette_down(CH_PT_move_palette, bpy.types.Operator):
+    bl_idname = 'ch.move_palette_down'
+    bl_label = 'Move Down'
+
+    action = 'DOWN'
+
+
+class CH_PT_move_palette_to_collection(bpy.types.Operator):
+    bl_idname = 'ch.move_palette_to_collection'
     bl_label = 'Move to Collection'
 
     palette_index: IntProperty()
@@ -208,19 +239,17 @@ class CH_OT_remove_color(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
-
-
 classes = (
     CH_OT_add_collection,
     CH_OT_remove_collection,
 
     CH_OT_add_palette,
     CH_OT_remove_palette,
+    CH_PT_move_palette_up,
+    CH_PT_move_palette_down,
 
     CH_OT_copy_palette,
-    CH_PT_move_palette,
-
+    CH_PT_move_palette_to_collection,
 
     CH_OT_add_color,
     CH_OT_remove_color

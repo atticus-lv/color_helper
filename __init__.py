@@ -3,13 +3,13 @@ bl_info = {
     "author": "Atticus",
     "blender": (3, 0, 0),
     "version": (0, 1),
-    "category": "Interface",
+    "category": "Color",
     "support": "COMMUNITY",
     "doc_url": "",
     "tracker_url": "",
     "description": "",
-    'warning': "Only support Windows",
-    "location": "Node Editor N panel",
+    'warning': "Alpha, Support Windows / MacOS",
+    "location": "3D View/Node Editor's N panel",
 }
 
 import importlib
@@ -46,6 +46,7 @@ for name in __dict__.values():
         globals()[name] = importlib.import_module(name)
         setattr(globals()[name], 'modules', __dict__)
 
+
 def prepare():
     from addon_utils import enable
     addons = [
@@ -55,6 +56,7 @@ def prepare():
     for addon in addons:
         enable(addon)
 
+
 def register():
     for name in __dict__.values():
         if name in sys.modules and hasattr(sys.modules[name], 'register'):
@@ -63,7 +65,8 @@ def register():
             except ValueError:  # open template file may cause this problem
                 pass
 
-    prepare()
+    # prepare()
+
 
 def unregister():
     for name in __dict__.values():

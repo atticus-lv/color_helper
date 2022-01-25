@@ -20,26 +20,37 @@ def poll_shader_tree(self, object):
     return object.bl_idname == 'ShaderNodeTree'
 
 
-class PaletteProps(PropertyGroup):
-    # def get_name(self):
-    #     return self.get("name",'Palette')
-    #
-    # def set_name(self, value):
-    #     old_name = self.get("name",'Palette')
-    #
-    #     if old_name in bpy.data.node_groups:
-    #         nt = bpy.data.node_groups.get(old_name)
-    #         nt.name = value
-    #     self["name"] = value
+def correct_name(self, context):
+    path = self.path_from_id().split('.palettes')[0]
+    collection = eval('bpy.context.scene' + '.' + path)
+    if self.name in collection.palettes:
+        self.name += '_new'
 
-    # name: StringProperty(name='Name', get=get_name, set=set_name)
-    name: StringProperty(name='Name')
+
+class PaletteProps(PropertyGroup):
+    def get_name(self):
+        return self.get("name", 'Palette')
+
+    def set_name(self, value):
+        old_name = self.get("name", 'Palette')
+
+        path = self.path_from_id().split('.palettes')[0]
+        collection = eval('bpy.context.scene' + '.' + path)
+
+        if value in collection.palettes and value != old_name:
+            value += '_new'
+
+        self["name"] = value
+
+    name: StringProperty(name='Name', get=get_name, set=set_name)
+    # name: StringProperty(name='Name', update=correct_name)
     colors: CollectionProperty(type=PaletteColorProps)
     # bind
     node_group: PointerProperty(name='Node Group', type=bpy.types.NodeTree, poll=poll_shader_tree)
     node_group_update: BoolProperty('Update Node Group', default=False)
     # UI
     edit_mode: BoolProperty(name='Edit', default=False)
+    hide: BoolProperty(name='Hide', default=False)
 
 
 class PaletteCollectionProps(PropertyGroup):
