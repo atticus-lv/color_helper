@@ -5,7 +5,7 @@ import random
 
 
 class CH_OT_shuffle_palette(bpy.types.Operator):
-    """Shift to update node group binding together """
+    """Shuffle Palette Color"""
     bl_idname = "ch.shuffle_palette"
     bl_label = "Shuffle Colors"
     bl_options = {'UNDO_GROUPED'}
@@ -22,9 +22,6 @@ class CH_OT_shuffle_palette(bpy.types.Operator):
 
         for i, color in enumerate(shuffled_colors):
             palette.colors[i].color = color
-
-        if event.shift:
-            bpy.ops.ch.create_nodes_from_palette('INVOKE_DEFAULT', palette_index=self.palette_index)
 
         context.area.tag_redraw()
 
