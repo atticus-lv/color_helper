@@ -79,6 +79,8 @@ def load_asset():
     for window in bpy.context.window_manager.windows:
         for area in window.screen.areas:
             area.tag_redraw()
+    return base_dir
+
 
 def update_asset(self, context):
     load_asset()
@@ -107,7 +109,10 @@ class CH_OT_load_asset(bpy.types.Operator):
     bl_label = 'Load Asset'
 
     def execute(self, context):
-        load_asset()
+        base_dir = load_asset()
+
+        self.report({'INFO' if base_dir else 'ERROR'},
+                    f'Load asset from {base_dir}' if base_dir else f'Asset path error: {base_dir}')
         return {'FINISHED'}
 
 
