@@ -33,7 +33,8 @@ class CH_OT_remove_collection(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.ch_palette_collection.remove(self.collection_index)
-        context.scene.ch_palette_enum_collection = '0' if self.collection_index - 1 <= 0 else f'{self.collection_index - 1}'
+        if len(context.scene.ch_palette_collection) != 0:
+            context.scene.ch_palette_enum_collection = '0' if self.collection_index - 1 <= 0 else f'{self.collection_index - 1}'
 
         redraw_area()
 
@@ -57,7 +58,7 @@ class CH_OT_remove_palette(bpy.types.Operator):
 
 class CH_OT_add_palette(bpy.types.Operator):
     bl_idname = 'ch.add_palette'
-    bl_label = 'Add Palette'
+    bl_label = 'Palette'
 
     palette_index: IntProperty()
 
@@ -130,6 +131,26 @@ class CH_PT_move_palette_down(CH_PT_move_palette, bpy.types.Operator):
     bl_label = 'Move Down'
 
     action = 'DOWN'
+
+
+class CH_PT_sort_palette(bpy.types.Operator):
+    bl_idname = 'ch.sort_palette'
+    bl_label = 'Sort Palette'
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        active_coll = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        active_index = self.palette_index
+
+        my_list = active_coll.palettes
+        index = active_index
+        neighbor = index + (-1 if self.action == 'UP' else 1)
+        my_list.move(neighbor, index)
+
+        redraw_area()
+        return {'FINISHED'}
 
 
 class CH_PT_move_palette_to_collection(bpy.types.Operator):

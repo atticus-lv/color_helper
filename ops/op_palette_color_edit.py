@@ -186,8 +186,6 @@ class CH_OT_sort_color(bpy.types.Operator):
         col.prop(self, 'mode', expand=True)
         col.prop(self, 'reverse')
 
-        layout.prop(self, 'auto_apply')
-
     def invoke(self, context, event):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         self.src_palette = collection.palettes[self.palette_index]

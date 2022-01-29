@@ -3,7 +3,6 @@ import bpy
 import sys
 import os
 
-
 TEMP_DIR = ''
 
 
@@ -20,18 +19,17 @@ def get_dir():
 class Clipboard():
 
     def __init__(self, file_urls=None):
-        if sys.platform not in {'win32','darwin'}:
+        if sys.platform not in {'win32', 'darwin'}:
             raise EnvironmentError
 
     # mac
-    def get_osascript_args(self,commands):
+    def get_osascript_args(self, commands):
         args = ["osascript"]
         for command in commands:
             args += ["-e", command]
         return args
 
-    #
-
+    # win
     def get_args(self, script):
         powershell_args = [
             os.path.join(
@@ -69,15 +67,13 @@ class Clipboard():
         stdout, stderr = popen.communicate()
         return popen, stdout, stderr
 
-
-
-    def pull_image_from_clipboard(self,save_name = 'ch_cache_image.png'):
-        filepath = os.path.join(get_dir(),save_name)
+    def pull_image_from_clipboard(self, save_name='ch_cache_image.png'):
+        filepath = os.path.join(get_dir(), save_name)
         if sys.platform == 'win32':
             image_script = (
-                        "$image = Get-Clipboard -Format Image; "
-                        f"if ($image) {{ $image.Save('{filepath}'); Write-Output 0 }}"
-                    )
+                "$image = Get-Clipboard -Format Image; "
+                f"if ($image) {{ $image.Save('{filepath}'); Write-Output 0 }}"
+            )
 
             popen, stdout, stderr = self.execute_powershell(image_script)
         elif sys.platform == 'darwin':
@@ -94,4 +90,3 @@ class Clipboard():
 
         # print(filepath, stdout, stderr)
         return filepath
-
