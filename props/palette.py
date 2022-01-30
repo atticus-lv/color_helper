@@ -47,7 +47,7 @@ class PaletteProps(PropertyGroup):
     colors: CollectionProperty(type=PaletteColorProps)
     # bind
     node_group: PointerProperty(name='Node Group', type=bpy.types.NodeTree, poll=poll_shader_tree)
-    node_group_update: BoolProperty('Update Node Group', default=False)
+    node_group_update: BoolProperty(name='Update Node Group', default=False)
     # UI
     edit_mode: BoolProperty(name='Edit', default=False)
     hide: BoolProperty(name='Hide', default=False)

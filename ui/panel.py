@@ -144,6 +144,8 @@ class SidePanelBase:
                      text='' if len(palette.colors) != 0 else 'Add Color').palette_index = palette_index
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
+        row.operator('ch.generate_color', icon='ADD',
+                     text='').palette_index = palette_index
 
     def draw_ui(self, context, layout):
 
@@ -151,6 +153,8 @@ class SidePanelBase:
             collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
 
             row = layout.row()
+            # row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC', text='')
+            row = row.row()
             row.scale_y = 1.25
             row.scale_x = 1.5
             row.alignment = "RIGHT"
@@ -201,11 +205,9 @@ class SidePanelBase:
         col = layout.column()
         col.scale_y = col.scale_x = 1.25
 
-        col.box().operator('ch.add_palette', icon='ADD', emboss=False)
-
-        row = col.row()
-        row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC')
-        row.operator('ch.create_palette_from_clipboard', icon='PASTEDOWN')
+        add = col.split(factor=0.3)
+        add.box().operator('ch.add_palette', icon='ADD', emboss=False)
+        add.box().operator('ch.create_palette_from_clipboard', icon='PASTEDOWN', emboss=False)
 
     def draw(self, context):
         layout = self.layout
