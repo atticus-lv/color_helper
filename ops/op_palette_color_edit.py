@@ -39,7 +39,7 @@ def get_active_palette(palette_index):
 
 class TempColorProps(PropertyGroup):
     color: FloatVectorProperty(
-        subtype='COLOR', name='', min=0.0, max=1.0, size=4)
+        subtype='COLOR', name='', min=0, soft_max=1, size=4)
 
 
 history_colors = []
@@ -84,29 +84,15 @@ def update_sort(self, context):
         self.temp_colors[new_index].color = color
 
 
-def add_alpha(c):
-    rgb = list(c)
-    return (rgb[0], rgb[1], rgb[2], 1)
+def hsv_2_rgba(c):
+    """blender style hsv to rgba"""
+    return (c.r, c.g, c.b, 1)
 
 
 def get_base_color(self):
     c = Color()
-    c.hsv = 1.0, 0.0, 1.0
-    index = [0, 1, 2, 3, 4]
-    random.shuffle(index)
-    c.hsv = random.random(), random.random(), random.random()
-    if random.randint(0, 3) / 2 == 0:
-        c.h = 0.0
-    if c.v >= 0.95:
-        c.v = c.v - 0.1
-    elif c.v <= 0.4:
-        c.v = c.v + 0.2
-
     import colorsys
-    if self.use_custom_color:
-        if colorsys.rgb_to_hsv(*self.custom_base_color[:3]) != (0.0, 0.0, 0.0):
-            for i, rgb in enumerate(list(c)):
-                c[i] = random.uniform(self.custom_base_color[i] - 0.1, self.custom_base_color[i] + 0.05)
+    c.hsv = colorsys.rgb_to_hsv(*self.base_color[:3])
     return c
 
 
@@ -119,98 +105,54 @@ def shuffle_colors(colors):
 
 
 def update_Monochromatic(self, c: Color):
-    hue = c.h
-    sat_less = 0.0
-    if c.s <= 0.1:
-        sat_less = 0.0
-    else:
-        sat_less = random.uniform(0.1, c.s)
+    base_hue = c.h
+    base_sat = c.s
+    base_val = c.v
 
-    if sat_less == c.s:
-        sat_less = random.uniform(0.1, c.s)
+    offset_val = base_val + 0.3 if base_val < 0.7 else base_val - 0.5
+    offset_val2 = base_val - 0.4 if base_val > 0.4 else base_val + 0.6
 
-    if sat_less < 0.25:
-        sat_less = 0.4
+    offset_sat = base_sat - 0.3 if base_sat > 0.4 else base_sat + 0.3
 
-    sat_more = random.uniform(c.s + 0.1, c.s + 0.2)
+    color_1 = Color()
+    color_2 = Color()
+    color_3 = Color()
+    color_4 = Color()
+    color_5 = Color()
 
-    val_less = random.uniform(0.2, c.v)
-    val_more = random.uniform(c.v + 0.1, c.v + 0.3)
+    color_1.hsv = base_hue, base_sat, max(0.3, offset_val)
+    color_2.hsv = base_hue, max(0.3, offset_sat), max(0.2, base_val)
+    color_3.hsv = base_hue, base_sat, base_val
+    color_4.hsv = base_hue, max(0.3, offset_sat), max(0.3, offset_val)
+    color_5.hsv = base_hue, base_sat, offset_val2
 
-    if val_less == 0.0:
-        val_less = 0.3
-    elif val_more == 0.0:
-        val_more = 0.7
-
-    c1 = Color()
-    c1.hsv = hue, sat_more, val_more
-
-    self.temp_colors[0].color = add_alpha(c1)
-
-    c1.hsv = hue, sat_more + 0.1, val_more
-    self.temp_colors[1].color = add_alpha(c1)
-
-    c1.hsv = hue, c.s, c.v
-    self.temp_colors[2].color = add_alpha(c1)
-
-    c1.hsv = hue, sat_more + 0.1, val_less - 0.1
-    self.temp_colors[3].color = add_alpha(c1)
-
-    c1.hsv = hue, sat_less, val_less - 0.1
-    self.temp_colors[4].color = add_alpha(c1)
-
-    shuffle_colors(self.temp_colors)
+    self.temp_colors[0].color = hsv_2_rgba(color_1)
+    self.temp_colors[1].color = hsv_2_rgba(color_2)
+    self.temp_colors[2].color = hsv_2_rgba(color_3)
+    self.temp_colors[3].color = hsv_2_rgba(color_4)
+    self.temp_colors[4].color = hsv_2_rgba(color_5)
 
 
 def update_Analogous(self, c: Color):
     # Analogous
-    sat = random.uniform(c.s, 1)
-    if sat <= 0.4:
-        sat = sat + 0.35
-    val = c.v
-    if (val <= 1.0 or val > 1.0) and val >= 0.8:
-        val = val - 0.1
-    if val <= 0.3:
-        val = 0.7
-    val1 = random.uniform(val + 0.1, val + 0.25)
-    if (val1 <= 1.0 or val1 > 1.0) and val1 >= 0.8:
-        val1 = val1 - 0.3
-    if val1 <= 0.3:
-        val1 = 0.7
-    hue1 = random.uniform(c.h + 0.2, c.h + 0.3)
-    hue = random.uniform(c.h, c.h + 0.2)
-    if hue1 == hue:
-        hue1 = hue1 - 0.1
-    if hue == 0:
-        hue1 = 0.1
-    c2 = Color()
-    c2.hsv = hue1, sat - 0.2, val
+    offset = self.slider_Analogous_offset
 
-    self.temp_colors[2].color = add_alpha(c2)
+    base_hue = c.h
+    base_sat = c.s
+    base_val = c.v
 
-    Hue1_2 = random.uniform(c.h - 0.07, c.h - 0.2)
-    if Hue1_2 == hue1:
-        Hue1_2 = Hue1_2 - 0.1
-    c2.hsv = hue, sat + 0.2, val1
-    self.temp_colors[0].color = add_alpha(c2)
-    self.temp_colors[4].color = add_alpha(c2)
+    start_hue = base_hue - 2 * offset
+    for i in range(0, 5):
+        hue = start_hue + offset * i
 
-    Hue_1 = random.uniform(c.h, c.h - 0.3)
-    if Hue_1 == 0:
-        Hue_1 = 0.9
-    if Hue_1 == hue:
-        Hue_1 = Hue_1 - 0.08
-    if c.h == 0.0:
-        Hue_1 = 1 - abs(Hue_1)
-        Hue1_2 = 1 - abs(Hue1_2)
+        if hue < 0:
+            hue = 1 + hue
+        elif hue > + 1:
+            hue = 1 - hue
 
-    c2.hsv = Hue1_2, sat, val1
-    self.temp_colors[2].color = add_alpha(c2)
-
-    c2.hsv = Hue_1, sat, val
-    self.temp_colors[3].color = add_alpha(c2)
-
-    shuffle_colors(self.temp_colors)
+        new_color = Color()
+        new_color.hsv = hue, base_sat, base_val
+        self.temp_colors[i].color = hsv_2_rgba(new_color)
 
 
 def update_Complementary(self, c: Color):
@@ -245,19 +187,19 @@ def update_Complementary(self, c: Color):
 
     c2 = Color()
     c2.hsv = Hue, Saturation_more, Value_less
-    self.temp_colors[0].color = add_alpha(c2)
+    self.temp_colors[0].color = hsv_2_rgba(c2)
 
     c2.hsv = Hue, Saturation_less, Value_more
-    self.temp_colors[1].color = add_alpha(c2)
+    self.temp_colors[1].color = hsv_2_rgba(c2)
 
     c2.hsv = Hue, Saturation, Value
-    self.temp_colors[2].color = add_alpha(c2)
+    self.temp_colors[2].color = hsv_2_rgba(c2)
 
     c2.hsv = Hue1, Saturation_more, Value_less
-    self.temp_colors[3].color = add_alpha(c2)
+    self.temp_colors[3].color = hsv_2_rgba(c2)
 
     c2.hsv = Hue1, Saturation, Value
-    self.temp_colors[4].color = add_alpha(c2)
+    self.temp_colors[4].color = hsv_2_rgba(c2)
 
     shuffle_colors(self.temp_colors)
 
@@ -275,20 +217,22 @@ def update_generator(self, context):
     restore(self)
 
     if self.generate_color:
+        # clear color
         self.temp_colors.clear()
         for color_item in range(0, 5):
             clr = self.temp_colors.add()
             clr.color = (1, 1, 1, 1)
-
+        # generate_method
         c = get_base_color(self)
-        if self.method == '0':
-            update_Monochromatic(self, c)
-        elif self.method == '1':
+        if self.generate_method == 'ANALOGOUS':
             update_Analogous(self, c)
-        elif self.method == '2':
+        elif self.generate_method == 'MONOCHROMATIC':
+            update_Monochromatic(self, c)
+        elif self.generate_method == 'COMPLEMENTARY':
             update_Complementary(self, c)
 
     else:
+        # restore from source palette
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         src_palette = collection.palettes[self.palette_index]
 
@@ -317,19 +261,26 @@ class CH_OT_edit_color(bpy.types.Operator):
     palette_index: IntProperty()
 
     # color generate
+    #################
     generate_color: BoolProperty(name='Generate', update=update_generator)
-    use_custom_color: BoolProperty(default=False, name='Use Custom Color', update=update_generator)
-    custom_base_color: FloatVectorProperty(subtype='COLOR', size=4, default=(1, 1, 1, 1), update=update_generator)
-    method: EnumProperty(name='Method',
-                         items=[
-                             ('0', 'Monochromatic', ''),
-                             ('1', 'Analogous', ''),
-                             ('2', 'Complementary', ''),
-                         ], update=update_generator)
+    generate_method: EnumProperty(name='Method',
+                                  items=[
+                                      ('ANALOGOUS', 'Analogous', ''),
+                                      ('MONOCHROMATIC', 'Monochromatic', ''),
+                                      ('COMPLEMENTARY', 'Complementary', ''),
+                                  ], update=update_generator)
+
+    base_color: FloatVectorProperty(subtype='COLOR', size=4, min=0, max=1, default=(0.48, 0.6, 0, 1),
+                                    update=update_generator)
+
+    # Analogous
+    slider_Analogous_offset: FloatProperty(name='Offset', min=0, max=0.2, default=0.1,
+                                           update=update_generator)  # 5 color 4 step
 
     refresh: BoolProperty(name='Refresh', update=update_generator)
 
-    # offset hsv
+    ###############
+    # global offset hsv
     offset_h: FloatProperty(name='Hue', default=0, max=0.5, min=-0.5, update=update_hsv)
     offset_s: FloatProperty(name='Saturation', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
     offset_v: FloatProperty(name='Value', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
@@ -389,11 +340,13 @@ class CH_OT_edit_color(bpy.types.Operator):
         box = layout.box()
         box.prop(self, 'generate_color')
         if self.generate_color:
-            box.prop(self, 'method')
+            box.prop(self, 'generate_method')
             row = box.row(align=True)
-            row.prop(self, 'use_custom_color')
-            if self.use_custom_color:
-                row.prop(self, 'custom_base_color', text='')
+            row.prop(self, 'base_color', text='')
+
+            # Analogous
+            if self.generate_method == 'ANALOGOUS':
+                box.prop(self, 'slider_Analogous_offset', slider=True)
 
             box.prop(self, 'refresh', emboss=False, toggle=True)
 
