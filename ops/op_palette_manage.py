@@ -215,11 +215,22 @@ class CH_PT_move_palette_to_collection(bpy.types.Operator):
 
 
 class CH_OT_add_color(bpy.types.Operator):
+    """Shift: Paste from Clipboard (Hex/rgb string with gamma convert)"""
     bl_idname = 'ch.add_color'
     bl_label = 'Add Color'
 
     palette_index: IntProperty()
     color_index: IntProperty()
+
+    def invoke(self, context, event):
+        if event.shift:
+            self.add_from_clipboard()
+            return {"FINISHED"}
+        else:
+            return self.execute(context)
+
+    def add_from_clipboard(self):
+        bpy.ops.ch.paste_and_add_color(palette_index=self.palette_index)
 
     def execute(self, context):
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]

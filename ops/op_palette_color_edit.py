@@ -309,15 +309,15 @@ PALETTE_HISTORY = []
 class CH_OT_edit_color(bpy.types.Operator):
     """Create, Offset, Sort Palette Colors"""
     bl_idname = 'ch.edit_color'
-    bl_label = 'Generate Color'
-    bl_options = {"INTERNAL", "UNDO_GROUPED"}
+    bl_label = 'Edit Mode'
+    bl_options = {"INTERNAL", "UNDO"}
 
     temp_colors: CollectionProperty(type=TempColorProps)
     src_palette = None
     palette_index: IntProperty()
 
     # color generate
-    generate_color: BoolProperty(name='Generate Color', update=update_generator)
+    generate_color: BoolProperty(name='Generate', update=update_generator)
     use_custom_color: BoolProperty(default=False, name='Use Custom Color', update=update_generator)
     custom_base_color: FloatVectorProperty(subtype='COLOR', size=4, default=(1, 1, 1, 1), update=update_generator)
     method: EnumProperty(name='Method',
@@ -417,6 +417,8 @@ class CH_OT_edit_color(bpy.types.Operator):
 
     def execute(self, context):
         self.apply_color()
+        self.generate_color = False
+
         return {'FINISHED'}
 
 
