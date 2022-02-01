@@ -213,6 +213,10 @@ def restore(self):
     history_colors.clear()
 
 
+def refresh_base_color(self, context):
+    self.base_color = (random.random(), random.random(), random.random(), 1)
+
+
 def update_generator(self, context):
     restore(self)
 
@@ -273,11 +277,11 @@ class CH_OT_edit_color(bpy.types.Operator):
     base_color: FloatVectorProperty(subtype='COLOR', size=4, min=0, max=1, default=(0.48, 0.6, 0, 1),
                                     update=update_generator)
 
+    refresh: BoolProperty(name='Refresh', update=refresh_base_color)
+
     # Analogous
     slider_Analogous_offset: FloatProperty(name='Offset', min=0, max=0.2, default=0.1,
                                            update=update_generator)  # 5 color 4 step
-
-    refresh: BoolProperty(name='Refresh', update=update_generator)
 
     ###############
     # global offset hsv
@@ -343,12 +347,11 @@ class CH_OT_edit_color(bpy.types.Operator):
             box.prop(self, 'generate_method')
             row = box.row(align=True)
             row.prop(self, 'base_color', text='')
+            row.prop(self, 'refresh', emboss=False, toggle=True, icon='FILE_REFRESH',text = '')
 
             # Analogous
             if self.generate_method == 'ANALOGOUS':
                 box.prop(self, 'slider_Analogous_offset', slider=True)
-
-            box.prop(self, 'refresh', emboss=False, toggle=True)
 
         box = layout.box()
         box.label(text='Offset')
