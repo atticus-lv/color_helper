@@ -144,8 +144,7 @@ class SidePanelBase:
                      text='' if len(palette.colors) != 0 else 'Add Color').palette_index = palette_index
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
-        row.operator('ch.generate_color', icon='ADD',
-                     text='').palette_index = palette_index
+
 
     def draw_ui(self, context, layout):
 
@@ -182,8 +181,8 @@ class SidePanelBase:
                     row.prop(palette, 'name', text='')
                     row.separator()
 
-                    row.operator('ch.sort_color', icon='SORTSIZE', text='').palette_index = i
-                    row.operator('ch.hsv_palette', icon='MOD_HUE_SATURATION', text='').palette_index = i
+                    row.operator('ch.edit_color', icon='TOOL_SETTINGS',
+                                 text='').palette_index = i
                     row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
                     row.separator()
 

@@ -1,7 +1,10 @@
 import bpy
 from bpy.props import IntProperty, BoolProperty, CollectionProperty, FloatVectorProperty, FloatProperty, EnumProperty
 
+from bpy.types import PropertyGroup
+
 import random
+from mathutils import Color
 
 
 class CH_OT_shuffle_palette(bpy.types.Operator):
@@ -34,21 +37,24 @@ def get_active_palette(palette_index):
     return src_palette
 
 
-from bpy.types import PropertyGroup
-
-
 class TempColorProps(PropertyGroup):
     color: FloatVectorProperty(
         subtype='COLOR', name='', min=0.0, max=1.0, size=4)
 
 
+history_colors = []
+
+
 def update_hsv(self, context):
-    src_palette = get_active_palette(self.palette_index)
+    global history_colors
 
     import colorsys
-    src_colors_rgb = [color.color[:3] for color in src_palette.colors]
-    src_colors_hsv = [colorsys.rgb_to_hsv(*rgb) for rgb in src_colors_rgb]
 
+    if len(history_colors) == 0:
+        src_colors_rgb = [color_item.color[:3] for color_item in self.temp_colors]
+        history_colors = src_colors_rgb
+
+    src_colors_hsv = [colorsys.rgb_to_hsv(*rgb) for rgb in history_colors]
     new_colors_rgba = list()
 
     for hsv in src_colors_hsv:
@@ -64,148 +70,18 @@ def update_hsv(self, context):
     context.area.tag_redraw()
 
 
-class CH_OT_hsv_palette(bpy.types.Operator):
-    bl_idname = 'ch.hsv_palette'
-    bl_label = 'Offset HSV'
-    bl_options = {"INTERNAL", "UNDO_GROUPED"}
-
-    palette_index: IntProperty()
-
-    temp_colors: CollectionProperty(type=TempColorProps)
-    src_palette = None
-
-    offset_h: FloatProperty(name='Hue', default=0, max=0.5, min=-0.5, update=update_hsv)
-    offset_s: FloatProperty(name='Saturation', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
-    offset_v: FloatProperty(name='Value', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
-
-    def invoke(self, context, event):
-        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
-        self.src_palette = collection.palettes[self.palette_index]
-
-        self.temp_colors.clear()
-        self.offset_h = self.offset_v = self.offset_s = 0
-
-        for color_item in self.src_palette.colors:
-            clr = self.temp_colors.add()
-            clr.color = color_item.color
-
-        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row(align=True)
-        row.scale_y = 1.5
-
-        for color_item in self.temp_colors:
-            row.prop(color_item, 'color')
-
-        box = layout.box()
-        box.label(text='Offset')
-        col = box.column(align=True)
-        col.use_property_split = True
-        col.use_property_decorate = False
-
-        col.prop(self, 'offset_h', slider=True)
-        col.prop(self, 'offset_s', slider=True)
-        col.prop(self, 'offset_v', slider=True)
-
-    def apply_color(self):
-        for i, color_item in enumerate(self.src_palette.colors):
-            color_item.color = self.temp_colors[i].color
-
-    def execute(self, context):
-        self.apply_color()
-
-        from .op_palette_manage import redraw_area
-        redraw_area()
-
-        return {"FINISHED"}
-
-
 def update_sort(self, context):
-    src_palette = get_active_palette(self.palette_index)
-
     import colorsys
 
     original_colors = sorted([
         (
             [(r, g, b)[int(self.mode)] for (r, g, b) in [colorsys.rgb_to_hsv(*color.color[:3])]],  # sort key
             tuple(color.color)  # source color
-        ) for color in src_palette.colors], reverse=self.reverse
+        ) for color in self.temp_colors], reverse=self.reverse
     )
 
     for new_index, (hsv, color) in enumerate(original_colors):
         self.temp_colors[new_index].color = color
-
-
-class CH_OT_sort_color(bpy.types.Operator):
-    bl_idname = 'ch.sort_color'
-    bl_label = 'Sort Color'
-    bl_options = {"INTERNAL", "UNDO_GROUPED"}
-
-    palette_index: IntProperty()
-
-    #
-    temp_colors: CollectionProperty(type=TempColorProps)
-    src_palette = None
-
-    mode: EnumProperty(name='Mode', items=[
-        ('0', 'Hue', ''),
-        ('1', 'Saturation', ''),
-        ('2', 'Value', ''),
-    ], update=update_sort)
-
-    reverse: BoolProperty(name='Reverse', default=False, update=update_sort)
-
-    def apply_color(self):
-        for i, color_item in enumerate(self.src_palette.colors):
-            color_item.color = self.temp_colors[i].color
-
-    def execute(self, context):
-        self.apply_color()
-
-        from .op_palette_manage import redraw_area
-        redraw_area()
-
-        return {'FINISHED'}
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row(align=True)
-        row.scale_y = 1.5
-
-        for color_item in self.temp_colors:
-            row.prop(color_item, 'color')
-
-        box = layout.box()
-        box.label(text='Offset')
-        col = box.column(align=True)
-        col.use_property_split = True
-        col.use_property_decorate = False
-
-        col.prop(self, 'mode', expand=True)
-        col.prop(self, 'reverse')
-
-    def invoke(self, context, event):
-        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
-        self.src_palette = collection.palettes[self.palette_index]
-
-        self.temp_colors.clear()
-        self.offset_h = self.offset_v = self.offset_s = 0
-
-        for color_item in self.src_palette.colors:
-            clr = self.temp_colors.add()
-            clr.color = color_item.color
-
-        # sort at first
-        update_sort(self, context)
-
-        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
-
-
-import random
-from mathutils import Color
-from bpy.props import BoolProperty
 
 
 def add_alpha(c):
@@ -232,6 +108,14 @@ def get_base_color(self):
             for i, rgb in enumerate(list(c)):
                 c[i] = random.uniform(self.custom_base_color[i] - 0.1, self.custom_base_color[i] + 0.05)
     return c
+
+
+def shuffle_colors(colors):
+    shuffled_colors = [tuple(c.color) for c in colors]
+    random.shuffle(shuffled_colors)
+
+    for i, color in enumerate(shuffled_colors):
+        colors[i].color = color
 
 
 def update_Monochromatic(self, c: Color):
@@ -274,6 +158,8 @@ def update_Monochromatic(self, c: Color):
 
     c1.hsv = hue, sat_less, val_less - 0.1
     self.temp_colors[4].color = add_alpha(c1)
+
+    shuffle_colors(self.temp_colors)
 
 
 def update_Analogous(self, c: Color):
@@ -324,6 +210,8 @@ def update_Analogous(self, c: Color):
     c2.hsv = Hue_1, sat, val
     self.temp_colors[3].color = add_alpha(c2)
 
+    shuffle_colors(self.temp_colors)
+
 
 def update_Complementary(self, c: Color):
     Hue = c.h
@@ -371,23 +259,56 @@ def update_Complementary(self, c: Color):
     c2.hsv = Hue1, Saturation, Value
     self.temp_colors[4].color = add_alpha(c2)
 
+    shuffle_colors(self.temp_colors)
+
+
+def restore(self):
+    self.offset_h = 0
+    self.offset_s = 0
+    self.offset_v = 0
+
+    global history_colors
+    history_colors.clear()
+
 
 def update_generator(self, context):
-    c = get_base_color(self)
-    if self.method == '0':
-        update_Monochromatic(self, c)
-    elif self.method == '1':
-        update_Analogous(self, c)
-    elif self.method == '2':
-        update_Complementary(self, c)
+    restore(self)
+
+    if self.generate_color:
+        self.temp_colors.clear()
+        for color_item in range(0, 5):
+            clr = self.temp_colors.add()
+            clr.color = (1, 1, 1, 1)
+
+        c = get_base_color(self)
+        if self.method == '0':
+            update_Monochromatic(self, c)
+        elif self.method == '1':
+            update_Analogous(self, c)
+        elif self.method == '2':
+            update_Complementary(self, c)
+
+    else:
+        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        src_palette = collection.palettes[self.palette_index]
+
+        self.temp_colors.clear()
+        self.offset_h = self.offset_v = self.offset_s = 0
+
+        for color_item in src_palette.colors:
+            clr = self.temp_colors.add()
+            clr.color = color_item.color
 
     from .op_palette_manage import redraw_area
     redraw_area()
 
 
-class CH_OT_generate_color(bpy.types.Operator):
-    """Create Color from method"""
-    bl_idname = 'ch.generate_color'
+PALETTE_HISTORY = []
+
+
+class CH_OT_edit_color(bpy.types.Operator):
+    """Create, Offset, Sort Palette Colors"""
+    bl_idname = 'ch.edit_color'
     bl_label = 'Generate Color'
     bl_options = {"INTERNAL", "UNDO_GROUPED"}
 
@@ -395,6 +316,8 @@ class CH_OT_generate_color(bpy.types.Operator):
     src_palette = None
     palette_index: IntProperty()
 
+    # color generate
+    generate_color: BoolProperty(name='Generate Color', update=update_generator)
     use_custom_color: BoolProperty(default=False, name='Use Custom Color', update=update_generator)
     custom_base_color: FloatVectorProperty(subtype='COLOR', size=4, default=(1, 1, 1, 1), update=update_generator)
     method: EnumProperty(name='Method',
@@ -402,10 +325,22 @@ class CH_OT_generate_color(bpy.types.Operator):
                              ('0', 'Monochromatic', ''),
                              ('1', 'Analogous', ''),
                              ('2', 'Complementary', ''),
-                         ], update=update_generator
-                         )
+                         ], update=update_generator)
 
     refresh: BoolProperty(name='Refresh', update=update_generator)
+
+    # offset hsv
+    offset_h: FloatProperty(name='Hue', default=0, max=0.5, min=-0.5, update=update_hsv)
+    offset_s: FloatProperty(name='Saturation', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
+    offset_v: FloatProperty(name='Value', default=0, max=1, min=-1, soft_max=0.5, soft_min=-0.5, update=update_hsv)
+
+    # sort
+    mode: EnumProperty(name='Mode', items=[
+        ('0', 'Hue', ''),
+        ('1', 'Saturation', ''),
+        ('2', 'Value', ''),
+    ], update=update_sort)
+    reverse: BoolProperty(name='Reverse', default=False, update=update_sort)
 
     @classmethod
     def poll(cls, context):
@@ -417,39 +352,68 @@ class CH_OT_generate_color(bpy.types.Operator):
         )
 
     def invoke(self, context, event):
+        # restore
+        global history_colors
+        history_colors.clear()
+        restore(self)
+
         collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
         self.src_palette = collection.palettes[self.palette_index]
 
         self.temp_colors.clear()
+        self.offset_h = self.offset_v = self.offset_s = 0
 
-        for i in range(0, 5):
+        for color_item in self.src_palette.colors:
             clr = self.temp_colors.add()
-            clr.color = (1, 1, 1, 1)
-
-        update_generator(self, context)
+            clr.color = color_item.color
 
         return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
 
     def apply_color(self):
-        self.src_palette.colors.clear()
-        for i in range(0, 5):
-            clr = self.src_palette.colors.add()
-            clr.color = self.temp_colors[i].color
+        if not self.generate_color:
+            for i, color_item in enumerate(self.src_palette.colors):
+                color_item.color = self.temp_colors[i].color
+        else:
+            self.src_palette.colors.clear()
+            for i in range(0, 5):
+                clr = self.src_palette.colors.add()
+                clr.color = self.temp_colors[i].color
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, 'method')
-        row = layout.row(align=True)
-        row.prop(self, 'use_custom_color')
-        if self.use_custom_color:
-            row.prop(self, 'custom_base_color', text='')
-
         row = layout.row(align=True)
         row.scale_y = 1.5
         for color_item in self.temp_colors:
             row.prop(color_item, 'color')
 
-        layout.prop(self, 'refresh', emboss=False, toggle=True)
+        box = layout.box()
+        box.prop(self, 'generate_color')
+        if self.generate_color:
+            box.prop(self, 'method')
+            row = box.row(align=True)
+            row.prop(self, 'use_custom_color')
+            if self.use_custom_color:
+                row.prop(self, 'custom_base_color', text='')
+
+            box.prop(self, 'refresh', emboss=False, toggle=True)
+
+        box = layout.box()
+        box.label(text='Offset')
+        col = box.column(align=True)
+        col.use_property_split = True
+        col.use_property_decorate = False
+
+        col.prop(self, 'offset_h', slider=True)
+        col.prop(self, 'offset_s', slider=True)
+        col.prop(self, 'offset_v', slider=True)
+
+        box = layout.box()
+        box.label(text='Sort')
+        col = box.column(align=True)
+        col.use_property_split = True
+        col.use_property_decorate = False
+        col.prop(self, 'mode', expand=True)
+        col.prop(self, 'reverse')
 
     def execute(self, context):
         self.apply_color()
@@ -459,14 +423,10 @@ class CH_OT_generate_color(bpy.types.Operator):
 def register():
     bpy.utils.register_class(CH_OT_shuffle_palette)
     bpy.utils.register_class(TempColorProps)
-    bpy.utils.register_class(CH_OT_hsv_palette)
-    bpy.utils.register_class(CH_OT_sort_color)
-    bpy.utils.register_class(CH_OT_generate_color)
+    bpy.utils.register_class(CH_OT_edit_color)
 
 
 def unregister():
     bpy.utils.unregister_class(CH_OT_shuffle_palette)
     bpy.utils.unregister_class(TempColorProps)
-    bpy.utils.unregister_class(CH_OT_hsv_palette)
-    bpy.utils.unregister_class(CH_OT_sort_color)
-    bpy.utils.unregister_class(CH_OT_generate_color)
+    bpy.utils.unregister_class(CH_OT_edit_color)
