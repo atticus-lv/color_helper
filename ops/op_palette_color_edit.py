@@ -145,9 +145,9 @@ def update_Analogous(self, c: Color):
     for i in range(0, 5):
         hue = start_hue + offset * i
 
-        if hue < 0:
+        if hue <= 0:
             hue = 1 + hue
-        elif hue > + 1:
+        elif hue >= 1:
             hue = 1 - hue
 
         new_color = Color()
@@ -163,9 +163,9 @@ def update_Complementary(self, c: Color):
     offset_val = base_val + 0.3 if base_val < 0.5 else base_val - 0.3
     offset_hue = base_hue + 0.5
 
-    if offset_hue < 0:
+    if offset_hue <= 0:
         offset_hue = 1 + offset_hue
-    elif offset_hue > + 1:
+    elif offset_hue >= 1:
         offset_hue = 1 - offset_hue
 
     color_1 = Color()
@@ -196,14 +196,14 @@ def update_SplitComplementary(self, c: Color):
     offset_hue = base_hue + offset
     offset_hue2 = base_hue - offset
 
-    if offset_hue < 0:
+    if offset_hue <= 0:
         offset_hue = 1 + offset_hue
-    elif offset_hue > 1:
+    elif offset_hue >= 1:
         offset_hue = 1 - offset_hue
 
-    if offset_hue2 < 0:
+    if offset_hue2 <= 0:
         offset_hue2 = 1 + offset_hue2
-    elif offset_hue2 > 1:
+    elif offset_hue2 >= 1:
         offset_hue2 = 1 - offset_hue2
 
     offset_val = base_val - 0.3 if base_val < 0.7 else base_val + 0.3
