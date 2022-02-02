@@ -156,52 +156,35 @@ def update_Analogous(self, c: Color):
 
 
 def update_Complementary(self, c: Color):
-    Hue = c.h
-    Hue1 = 0.0
-    if Hue >= 0.5:
-        Hue1 = Hue - 0.5
-    else:
-        Hue1 = Hue + 0.5
-    Saturation = c.s
-    if Saturation <= 1.0 and Saturation >= 0.95:
-        Saturation = Saturation - 0.1
-    if Saturation <= 0.3:
-        Saturation = Saturation + 0.25
-    Saturation_more = random.uniform(Saturation + 0.05, Saturation + 0.2)
-    Saturation_less = random.uniform(Saturation - 0.2, Saturation - 0.05)
-    if Saturation_more <= 1.0 and Saturation_more >= 0.95:
-        Saturation_more = Saturation_more - 0.1
-    if Saturation_more <= 0.6:
-        Saturation_more = Saturation_more + 0.45
+    base_hue = c.h
+    base_sat = c.s
+    base_val = c.v
 
-    if Saturation_less <= 1.0 and Saturation_less >= 0.95:
-        Saturation_less = Saturation_less - 0.15
+    offset_val = base_val + 0.3 if base_val < 0.5 else base_val - 0.3
+    offset_hue = base_hue + 0.5
 
-    Value = c.v
-    Value_more = random.uniform(Value + 0.05, Value + 0.2)
-    Value_less = random.uniform(Value - 0.2, Value - 0.05)
-    if Value_more >= 0.0 and Value_more < 0.1:
-        Value_more = Value_more + 0.35
-    if Value_less >= 0.0 and Value_less < 0.1:
-        Value_less = Value_less + 0.3
+    if offset_hue < 0:
+        offset_hue = 1 + offset_hue
+    elif offset_hue > + 1:
+        offset_hue = 1 - offset_hue
 
-    c2 = Color()
-    c2.hsv = Hue, Saturation_more, Value_less
-    self.temp_colors[0].color = hsv_2_rgba(c2)
+    color_1 = Color()
+    color_2 = Color()
+    color_3 = Color()
+    color_4 = Color()
+    color_5 = Color()
 
-    c2.hsv = Hue, Saturation_less, Value_more
-    self.temp_colors[1].color = hsv_2_rgba(c2)
+    color_1.hsv = base_hue, max(base_sat + 0.1, 0.1), offset_val
+    color_2.hsv = base_hue, max(base_sat - 0.1, 0), min(base_val + 0.3, 1)
+    color_3.hsv = base_hue, base_sat, base_val
+    color_4.hsv = offset_hue, max(base_sat, 0.2), offset_val
+    color_5.hsv = offset_hue, base_sat, base_val
 
-    c2.hsv = Hue, Saturation, Value
-    self.temp_colors[2].color = hsv_2_rgba(c2)
-
-    c2.hsv = Hue1, Saturation_more, Value_less
-    self.temp_colors[3].color = hsv_2_rgba(c2)
-
-    c2.hsv = Hue1, Saturation, Value
-    self.temp_colors[4].color = hsv_2_rgba(c2)
-
-    shuffle_colors(self.temp_colors)
+    self.temp_colors[0].color = hsv_2_rgba(color_1)
+    self.temp_colors[1].color = hsv_2_rgba(color_2)
+    self.temp_colors[2].color = hsv_2_rgba(color_3)
+    self.temp_colors[3].color = hsv_2_rgba(color_4)
+    self.temp_colors[4].color = hsv_2_rgba(color_5)
 
 
 def restore(self):
@@ -347,7 +330,7 @@ class CH_OT_edit_color(bpy.types.Operator):
             box.prop(self, 'generate_method')
             row = box.row(align=True)
             row.prop(self, 'base_color', text='')
-            row.prop(self, 'refresh', emboss=False, toggle=True, icon='FILE_REFRESH',text = '')
+            row.prop(self, 'refresh', emboss=False, toggle=True, icon='FILE_REFRESH', text='')
 
             # Analogous
             if self.generate_method == 'ANALOGOUS':
