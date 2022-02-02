@@ -1,0 +1,16 @@
+{
+  "Generate": "生成",
+  "Load Asset": "加载资产",
+  "Color Helper": "颜色助手",
+  "Analogous": "类比",
+  "Monochromatic": "单色",
+  "Complementary": "辅助色",
+  "Split Complementary": "分割辅助色",
+  "Shuffle": "打乱",
+  "Edit Color": "编辑颜色",
+  "Create Node Group From Palette": "从调色板创建节点组",
+  "Extra": "其他",
+  "Create Ramp Node": "创建渐变节点",
+  "Create Palette Image": "创建色卡图像",
+  "Export All Palette": "导出全部调色板"
+}
