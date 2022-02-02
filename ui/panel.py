@@ -145,7 +145,6 @@ class SidePanelBase:
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
 
-
     def draw_ui(self, context, layout):
 
         if len(context.scene.ch_palette_collection) != 0:
@@ -172,9 +171,9 @@ class SidePanelBase:
 
                 row.prop(palette, 'hide', text='', icon='TRIA_RIGHT' if palette.hide else 'TRIA_DOWN', emboss=False)
                 if palette.hide:
-                    row.label(text=palette.name)
-                    row.separator()
-                    row = row.row()
+                    sub = row.split(factor=0.35)
+                    sub.prop(palette, 'name', text='')
+                    row = sub.row()
                     row.scale_y = 0.75
                     self.draw_palette_color(row, palette, i)
                 else:
@@ -205,8 +204,10 @@ class SidePanelBase:
         col.scale_y = col.scale_x = 1.25
 
         add = col.split(factor=0.3)
-        add.box().operator('ch.add_palette', icon='ADD', emboss=False)
-        add.box().operator('ch.create_palette_from_clipboard', icon='PASTEDOWN', emboss=False)
+        add.box().operator('ch.add_palette', icon='ADD', emboss=False, text='New')
+        add.box().operator('ch.create_palette_from_clipboard', icon='PASTEDOWN', emboss=False, text='Paste')
+
+        add.box().operator('ch.batch_generate_color', icon='RENDER_RESULT',emboss=False,)
 
     def draw(self, context):
         layout = self.layout

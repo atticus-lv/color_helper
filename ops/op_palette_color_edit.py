@@ -10,7 +10,7 @@ from mathutils import Color
 class CH_OT_shuffle_palette(bpy.types.Operator):
     """Shuffle Palette Color"""
     bl_idname = "ch.shuffle_palette"
-    bl_label = "Shuffle Colors"
+    bl_label = "Shuffle"
     bl_options = {'UNDO_GROUPED'}
 
     palette_index: IntProperty()
@@ -145,9 +145,9 @@ def update_Analogous(self, c: Color):
     for i in range(0, 5):
         hue = start_hue + offset * i
 
-        if hue <= 0:
+        if hue < 0:
             hue = 1 + hue
-        elif hue >= 1:
+        elif hue > 1:
             hue = 1 - hue
 
         new_color = Color()
@@ -163,9 +163,9 @@ def update_Complementary(self, c: Color):
     offset_val = base_val + 0.3 if base_val < 0.5 else base_val - 0.3
     offset_hue = base_hue + 0.5
 
-    if offset_hue <= 0:
+    if offset_hue < 0:
         offset_hue = 1 + offset_hue
-    elif offset_hue >= 1:
+    elif offset_hue > 1:
         offset_hue = 1 - offset_hue
 
     color_1 = Color()
@@ -196,14 +196,14 @@ def update_SplitComplementary(self, c: Color):
     offset_hue = base_hue + offset
     offset_hue2 = base_hue - offset
 
-    if offset_hue <= 0:
+    if offset_hue < 0:
         offset_hue = 1 + offset_hue
-    elif offset_hue >= 1:
+    elif offset_hue > 1:
         offset_hue = 1 - offset_hue
 
-    if offset_hue2 <= 0:
+    if offset_hue2 < 0:
         offset_hue2 = 1 + offset_hue2
-    elif offset_hue2 >= 1:
+    elif offset_hue2 > 1:
         offset_hue2 = 1 - offset_hue2
 
     offset_val = base_val - 0.3 if base_val < 0.7 else base_val + 0.3
@@ -286,7 +286,7 @@ PALETTE_HISTORY = []
 class CH_OT_edit_color(bpy.types.Operator):
     """Create, Offset, Sort Palette Colors"""
     bl_idname = 'ch.edit_color'
-    bl_label = 'Edit Mode'
+    bl_label = 'Edit Color'
     bl_options = {"INTERNAL", "UNDO"}
 
     temp_colors: CollectionProperty(type=TempColorProps)
@@ -355,9 +355,15 @@ class CH_OT_edit_color(bpy.types.Operator):
             clr = self.temp_colors.add()
             clr.color = color_item.color
 
+        if self.generate_color:
+            update_generator(self, context)
+
         return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
 
     def apply_color(self):
+        collection = bpy.context.scene.ch_palette_collection[bpy.context.scene.ch_palette_collection_index]
+        self.src_palette = collection.palettes[self.palette_index]
+
         if not self.generate_color:
             for i, color_item in enumerate(self.src_palette.colors):
                 color_item.color = self.temp_colors[i].color
@@ -408,18 +414,60 @@ class CH_OT_edit_color(bpy.types.Operator):
 
     def execute(self, context):
         self.apply_color()
-        self.generate_color = False
 
         return {'FINISHED'}
+
+
+class CH_OT_batch_generate_color(bpy.types.Operator):
+    """Batch Create Color palettes"""
+    bl_idname = 'ch.batch_generate_color'
+    bl_label = 'Generate'
+    bl_options = {"REGISTER", "UNDO_GROUPED"}
+
+    count: IntProperty(name='Count', min=1, soft_max=10, default=5)
+    generate_method: EnumProperty(name='Method',
+                                  items=[
+                                      ('ANALOGOUS', 'Analogous', ''),
+                                      ('MONOCHROMATIC', 'Monochromatic', ''),
+                                      ('COMPLEMENTARY', 'Complementary', ''),
+                                      ('SPLIT_COMPLEMENTARY', 'Split Complementary', ''),
+                                  ])
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, )
+
+    def execute(self, context):
+        if len(context.scene.ch_palette_collection) == 0:
+            collection = context.scene.ch_palette_collection.add()
+            collection.name = 'Collection'
+        else:
+            collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+
+        for i in range(0, self.count):
+            bpy.ops.ch.add_palette()
+
+            src_palette = collection.palettes[-1]
+            src_palette.hide = True
+
+            bpy.ops.ch.edit_color(
+                generate_color=True,
+                generate_method=self.generate_method,
+                base_color=(random.random(), random.random(), random.random(), 1),
+                palette_index=-1,
+            )
+
+        return {"FINISHED"}
 
 
 def register():
     bpy.utils.register_class(CH_OT_shuffle_palette)
     bpy.utils.register_class(TempColorProps)
     bpy.utils.register_class(CH_OT_edit_color)
+    bpy.utils.register_class(CH_OT_batch_generate_color)
 
 
 def unregister():
     bpy.utils.unregister_class(CH_OT_shuffle_palette)
     bpy.utils.unregister_class(TempColorProps)
     bpy.utils.unregister_class(CH_OT_edit_color)
+    bpy.utils.unregister_class(CH_OT_batch_generate_color)

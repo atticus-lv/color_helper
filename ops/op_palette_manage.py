@@ -217,7 +217,7 @@ class CH_PT_move_palette_to_collection(bpy.types.Operator):
 class CH_OT_add_color(bpy.types.Operator):
     """Shift: Paste from Clipboard (Hex/rgb string with gamma convert)"""
     bl_idname = 'ch.add_color'
-    bl_label = 'Add Color'
+    bl_label = 'Add'
 
     palette_index: IntProperty()
     color_index: IntProperty()
