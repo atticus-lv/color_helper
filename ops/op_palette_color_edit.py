@@ -187,6 +187,50 @@ def update_Complementary(self, c: Color):
     self.temp_colors[4].color = hsv_2_rgba(color_5)
 
 
+def update_SplitComplementary(self, c: Color):
+    base_hue = c.h
+    base_sat = c.s
+    base_val = c.v
+    offset = self.slider_SplitComplementary_offset
+
+    offset_hue = base_hue + offset
+    offset_hue2 = base_hue - offset
+
+    if offset_hue < 0:
+        offset_hue = 1 + offset_hue
+    elif offset_hue > 1:
+        offset_hue = 1 - offset_hue
+
+    if offset_hue2 < 0:
+        offset_hue2 = 1 + offset_hue2
+    elif offset_hue2 > 1:
+        offset_hue2 = 1 - offset_hue2
+
+    offset_val = base_val - 0.3 if base_val < 0.7 else base_val + 0.3
+    offset_sat = base_sat - 0.1 if base_sat > 0.2 else base_sat + 0.1
+    offset_sat2 = base_sat - 0.05 if base_sat > 0.15 else base_sat + 0.05
+    offset_sat3 = base_sat + 0.1 if base_sat > 0.9 else base_sat - 0.1
+    offset_sat4 = base_sat + 0.05 if base_sat > 0.95 else base_sat - 0.05
+
+    color_1 = Color()
+    color_2 = Color()
+    color_3 = Color()
+    color_4 = Color()
+    color_5 = Color()
+
+    color_1.hsv = offset_hue, max(offset_sat, 0.1), offset_val
+    color_2.hsv = offset_hue, offset_sat2, base_val
+    color_3.hsv = base_hue, base_sat, base_val
+    color_4.hsv = offset_hue2, max(offset_sat3, 0.1), offset_val
+    color_5.hsv = offset_hue2, max(offset_sat4, 0.1), base_val
+
+    self.temp_colors[0].color = hsv_2_rgba(color_1)
+    self.temp_colors[1].color = hsv_2_rgba(color_2)
+    self.temp_colors[2].color = hsv_2_rgba(color_3)
+    self.temp_colors[3].color = hsv_2_rgba(color_4)
+    self.temp_colors[4].color = hsv_2_rgba(color_5)
+
+
 def restore(self):
     self.offset_h = 0
     self.offset_s = 0
@@ -217,6 +261,8 @@ def update_generator(self, context):
             update_Monochromatic(self, c)
         elif self.generate_method == 'COMPLEMENTARY':
             update_Complementary(self, c)
+        elif self.generate_method == 'SPLIT_COMPLEMENTARY':
+            update_SplitComplementary(self, c)
 
     else:
         # restore from source palette
@@ -255,6 +301,7 @@ class CH_OT_edit_color(bpy.types.Operator):
                                       ('ANALOGOUS', 'Analogous', ''),
                                       ('MONOCHROMATIC', 'Monochromatic', ''),
                                       ('COMPLEMENTARY', 'Complementary', ''),
+                                      ('SPLIT_COMPLEMENTARY', 'Split Complementary', ''),
                                   ], update=update_generator)
 
     base_color: FloatVectorProperty(subtype='COLOR', size=4, min=0, max=1, default=(0.48, 0.6, 0, 1),
@@ -265,6 +312,9 @@ class CH_OT_edit_color(bpy.types.Operator):
     # Analogous
     slider_Analogous_offset: FloatProperty(name='Offset', min=0, max=0.2, default=0.1,
                                            update=update_generator)  # 5 color 4 step
+    # Split Complementary
+    slider_SplitComplementary_offset: FloatProperty(name='Offset', min=0, max=0.5, default=0.25,
+                                                    update=update_generator)  # 2 step
 
     ###############
     # global offset hsv
@@ -335,6 +385,8 @@ class CH_OT_edit_color(bpy.types.Operator):
             # Analogous
             if self.generate_method == 'ANALOGOUS':
                 box.prop(self, 'slider_Analogous_offset', slider=True)
+            elif self.generate_method == 'SPLIT_COMPLEMENTARY':
+                box.prop(self, 'slider_SplitComplementary_offset', slider=True)
 
         box = layout.box()
         box.label(text='Offset')
