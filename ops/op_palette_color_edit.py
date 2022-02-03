@@ -231,6 +231,35 @@ def update_SplitComplementary(self, c: Color):
     self.temp_colors[4].color = hsv_2_rgba(color_5)
 
 
+def update_Shades(self, c: Color):
+    base_hue = c.h
+    base_sat = c.s
+    base_val = c.v
+
+    offset_val = base_val + 0.3 if base_val < 0.7 else base_val - 0.5
+    offset_val2 = base_val + 0.55 if base_val < 0.45 else base_val - 0.25
+    offset_val3 = base_val + 0.05 if base_val < 0.95 else base_val - 0.75
+    offset_val4 = base_val - 0.1
+
+    color_1 = Color()
+    color_2 = Color()
+    color_3 = Color()
+    color_4 = Color()
+    color_5 = Color()
+
+    color_1.hsv = base_hue, base_sat, offset_val
+    color_2.hsv = base_hue, base_sat, offset_val2
+    color_3.hsv = base_hue, base_sat, base_val
+    color_4.hsv = base_hue, base_sat, max(offset_val3, 0.2)
+    color_5.hsv = base_hue, base_sat, max(offset_val4, 0.2)
+
+    self.temp_colors[0].color = hsv_2_rgba(color_1)
+    self.temp_colors[1].color = hsv_2_rgba(color_2)
+    self.temp_colors[2].color = hsv_2_rgba(color_3)
+    self.temp_colors[3].color = hsv_2_rgba(color_4)
+    self.temp_colors[4].color = hsv_2_rgba(color_5)
+
+
 def restore(self):
     self.offset_h = 0
     self.offset_s = 0
@@ -255,14 +284,16 @@ def update_generator(self, context):
             clr.color = (1, 1, 1, 1)
         # generate_method
         c = get_base_color(self)
-        if self.generate_method == 'ANALOGOUS':
+        if self.generate_method == '0':
             update_Analogous(self, c)
-        elif self.generate_method == 'MONOCHROMATIC':
+        elif self.generate_method == '1':
             update_Monochromatic(self, c)
-        elif self.generate_method == 'COMPLEMENTARY':
+        elif self.generate_method == '2':
             update_Complementary(self, c)
-        elif self.generate_method == 'SPLIT_COMPLEMENTARY':
+        elif self.generate_method == '3':
             update_SplitComplementary(self, c)
+        elif self.generate_method == '4':
+            update_Shades(self, c)
 
     else:
         # restore from source palette
@@ -282,6 +313,15 @@ def update_generator(self, context):
 
 PALETTE_HISTORY = []
 
+GENERATE_RULES = [
+    ('0', 'Analogous', ''),
+    ('1', 'Monochromatic', ''),
+    ('2', 'Complementary', ''),
+    ('3', 'Split Complementary', ''),
+    ('4', 'Shades', ''),
+    ('5', 'Random', '')
+]
+
 
 class CH_OT_edit_color(bpy.types.Operator):
     """Create, Offset, Sort Palette Colors"""
@@ -297,12 +337,7 @@ class CH_OT_edit_color(bpy.types.Operator):
     #################
     generate_color: BoolProperty(name='Generate', update=update_generator)
     generate_method: EnumProperty(name='Method',
-                                  items=[
-                                      ('ANALOGOUS', 'Analogous', ''),
-                                      ('MONOCHROMATIC', 'Monochromatic', ''),
-                                      ('COMPLEMENTARY', 'Complementary', ''),
-                                      ('SPLIT_COMPLEMENTARY', 'Split Complementary', ''),
-                                  ], update=update_generator)
+                                  items=GENERATE_RULES[:-1], update=update_generator)
 
     base_color: FloatVectorProperty(subtype='COLOR', size=4, min=0, max=1, default=(0.48, 0.6, 0, 1),
                                     update=update_generator)
@@ -389,9 +424,9 @@ class CH_OT_edit_color(bpy.types.Operator):
             row.prop(self, 'refresh', emboss=False, toggle=True, icon='FILE_REFRESH', text='')
 
             # Analogous
-            if self.generate_method == 'ANALOGOUS':
+            if self.generate_method == '0':
                 box.prop(self, 'slider_Analogous_offset', slider=True)
-            elif self.generate_method == 'SPLIT_COMPLEMENTARY':
+            elif self.generate_method == '3':
                 box.prop(self, 'slider_SplitComplementary_offset', slider=True)
 
         box = layout.box()
@@ -426,12 +461,7 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
 
     count: IntProperty(name='Count', min=1, soft_max=10, default=5)
     generate_method: EnumProperty(name='Method',
-                                  items=[
-                                      ('ANALOGOUS', 'Analogous', ''),
-                                      ('MONOCHROMATIC', 'Monochromatic', ''),
-                                      ('COMPLEMENTARY', 'Complementary', ''),
-                                      ('SPLIT_COMPLEMENTARY', 'Split Complementary', ''),
-                                  ])
+                                  items=GENERATE_RULES)
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, )
@@ -451,7 +481,8 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
 
             bpy.ops.ch.edit_color(
                 generate_color=True,
-                generate_method=self.generate_method,
+                generate_method=str(round(random.uniform(0, 5))) if
+                self.generate_method == '5' else self.generate_method,
                 base_color=(random.random(), random.random(), random.random(), 1),
                 palette_index=-1,
             )
