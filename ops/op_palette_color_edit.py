@@ -459,7 +459,7 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
     bl_label = 'Generate'
     bl_options = {"REGISTER", "UNDO_GROUPED"}
 
-    count: IntProperty(name='Count', min=1, soft_max=10, default=5)
+    count: IntProperty(name='Count', min=1, soft_max=10, max=100, default=5)
     generate_method: EnumProperty(name='Method',
                                   items=GENERATE_RULES)
 
