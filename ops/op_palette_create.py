@@ -4,7 +4,7 @@ from bpy.props import EnumProperty, StringProperty, CollectionProperty
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 
-class CreatPaletteBase:
+class CreatePaletteBase:
 
     @classmethod
     def poll(cls, context):
@@ -38,7 +38,7 @@ class CreatPaletteBase:
             clr.color = color
         return palette_item
 
-class CH_OT_create_palette_from_palette(CreatPaletteBase, bpy.types.Operator, ImportHelper):
+class CH_OT_create_palette_from_palette(CreatePaletteBase, bpy.types.Operator, ImportHelper):
     bl_idname = 'ch.create_palette_from_palette'
     bl_label = 'Platte From Palette Files'
     bl_options = {'UNDO_GROUPED'}
@@ -67,7 +67,7 @@ class CH_OT_create_palette_from_palette(CreatPaletteBase, bpy.types.Operator, Im
         return {'FINISHED'}
 
 
-class CH_OT_create_palette_from_clipboard(CreatPaletteBase, bpy.types.Operator):
+class CH_OT_create_palette_from_clipboard(CreatePaletteBase, bpy.types.Operator):
     bl_idname = 'ch.create_palette_from_clipboard'
     bl_label = 'Platte From Clipboard'
     bl_options = {'UNDO_GROUPED'}
