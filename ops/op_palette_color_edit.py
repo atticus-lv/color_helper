@@ -481,7 +481,7 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
 
             bpy.ops.ch.edit_color(
                 generate_color=True,
-                generate_method=str(round(random.uniform(0, 5))) if
+                generate_method=str(round(random.uniform(0, 4))) if
                 self.generate_method == '5' else self.generate_method,
                 base_color=(random.random(), random.random(), random.random(), 1),
                 palette_index=-1,
