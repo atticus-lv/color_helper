@@ -1,8 +1,8 @@
 bl_info = {
     "name": "Color Helper",
-    "author": "Atticus",
+    "author": "Atticus; Sponsor: 只剩一瓶辣椒酱",
     "blender": (3, 0, 0),
-    "version": (0, 2),
+    "version": (0, 3),
     "category": "Color",
     "support": "COMMUNITY",
     "doc_url": "",
@@ -46,17 +46,6 @@ for name in __dict__.values():
         globals()[name] = importlib.import_module(name)
         setattr(globals()[name], 'modules', __dict__)
 
-
-def prepare():
-    from addon_utils import enable
-    addons = [
-        'io_import_images_as_planes',
-        'io_import_dxf',
-    ]
-    for addon in addons:
-        enable(addon)
-
-
 def register():
     for name in __dict__.values():
         if name in sys.modules and hasattr(sys.modules[name], 'register'):
@@ -64,8 +53,6 @@ def register():
                 sys.modules[name].register()
             except ValueError:  # open template file may cause this problem
                 pass
-
-    # prepare()
 
 
 def unregister():
