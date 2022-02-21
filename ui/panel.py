@@ -103,6 +103,21 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class CH_OT_palette_toggler(bpy.types.Operator):
+    bl_idname = 'ch.palette_toggler'
+    bl_label = 'Toggle'
+
+    def execute(self, context):
+        coll = get_coll_active()
+
+        hide = coll.palettes[0].hide
+
+        for i, palette in enumerate(coll.palettes):
+            palette.hide = not hide
+
+        return {"FINISHED"}
+
+
 class SidePanelBase:
     bl_label = 'Color Helper'
     bl_category = 'CH'
@@ -152,15 +167,16 @@ class SidePanelBase:
 
             row = layout.row()
             # row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC', text='')
-            row = row.row()
+            row = row.row(align = True)
             row.scale_y = 1.25
-            row.scale_x = 1.5
-            row.alignment = "RIGHT"
-            row.separator()
+            row.scale_x = 1.1
+            row.prop(context.window_manager, 'ch_show_palette_name' ,icon = 'EVENT_N',text = '')
+            row.operator('ch.palette_toggler',text = '',icon = 'FULLSCREEN_ENTER')
+
+            row.separator(factor = 5)
             row.prop(context.scene, 'ch_palette_enum_collection', text='', icon='COLOR')
 
             row = row.row()
-            row.scale_x = 0.9
             row.popover(panel='CH_PT_collection_manager', icon='PREFERENCES', text='')
 
             for i, palette in enumerate(collection.palettes):
@@ -171,10 +187,13 @@ class SidePanelBase:
 
                 row.prop(palette, 'hide', text='', icon='TRIA_RIGHT' if palette.hide else 'TRIA_DOWN', emboss=False)
                 if palette.hide:
-                    sub = row.split(factor=0.35)
-                    sub.prop(palette, 'name', text='')
-                    row = sub.row()
+                    if context.window_manager.ch_show_palette_name:
+                        sub = row.split(factor=0.35)
+                        sub.prop(palette, 'name', text='')
+                        row = sub.row()
+
                     row.scale_y = 0.75
+                    row.separator(factor=0.5)
                     self.draw_palette_color(row, palette, i)
                 else:
                     row.prop(palette, 'name', text='')
@@ -193,7 +212,7 @@ class SidePanelBase:
                     sub.operator('ch.create_nodes_from_palette',
                                  icon=node_icon, text='').palette_index = i
 
-                    row.separator()
+                    row.separator(factor=0.5)
 
                     row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i
 
@@ -207,7 +226,7 @@ class SidePanelBase:
         add.box().operator('ch.add_palette', icon='ADD', emboss=False, text='New')
         add.box().operator('ch.create_palette_from_clipboard', icon='PASTEDOWN', emboss=False, text='Paste')
 
-        add.box().operator('ch.batch_generate_color', icon='RENDER_RESULT',emboss=False,)
+        add.box().operator('ch.batch_generate_color', icon='RENDER_RESULT', emboss=False, )
 
     def draw(self, context):
         layout = self.layout
@@ -259,10 +278,13 @@ ui_panel = (
 
 
 def register():
+    bpy.types.WindowManager.ch_show_palette_name = BoolProperty(name='Show Name', default=True)
+
     bpy.utils.register_class(CH_OT_select_collection)
     bpy.utils.register_class(CH_MT_collection_switcher)
     bpy.utils.register_class(CH_PT_collection_manager)
     bpy.utils.register_class(CH_OT_palette_extra_op_caller)
+    bpy.utils.register_class(CH_OT_palette_toggler)
     bpy.utils.register_class(CH_PT_node_editor)
     bpy.utils.register_class(CH_MT_pop_menu)
 
@@ -274,7 +296,10 @@ def unregister():
     bpy.utils.unregister_class(CH_MT_collection_switcher)
     bpy.utils.unregister_class(CH_PT_collection_manager)
     bpy.utils.unregister_class(CH_OT_palette_extra_op_caller)
+    bpy.utils.unregister_class(CH_OT_palette_toggler)
     bpy.utils.unregister_class(CH_PT_node_editor)
     bpy.utils.unregister_class(CH_MT_pop_menu)
+
+    del bpy.types.WindowManager.ch_show_palette_name
 
     # bpy.types.VIEW3D_PT_tools_active.remove(draw_tool_bar)

@@ -54,7 +54,7 @@ from bpy_extras.io_utils import ExportHelper
 
 
 class CH_OT_batch_export_palette(bpy.types.Operator, ExportHelper):
-    """Export all palette in this collection to your pref export path"""
+    """Export all palette in this collection"""
     bl_idname = 'ch.batch_export_palette'
     bl_label = 'Export All Palette'
     bl_options = {"INTERNAL"}
