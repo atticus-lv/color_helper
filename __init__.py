@@ -1,6 +1,6 @@
 bl_info = {
     "name": "Color Helper",
-    "author": "Atticus; Sponsor: 只剩一瓶辣椒酱",
+    "author": "Atticus",
     "blender": (3, 0, 0),
     "version": (0, 3),
     "category": "Color",

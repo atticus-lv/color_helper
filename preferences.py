@@ -90,30 +90,54 @@ def update_asset(self, context):
 class CH_Preference(bpy.types.AddonPreferences):
     bl_idname = __package__
 
+    # ui
+    ui: EnumProperty(items=[
+        ('PROPERTY', 'Property', ''),
+        ('URL', 'Links', ''),
+    ])
     category: StringProperty(name="Category", default="CH", update=update_category)
-    directory: StringProperty(name='Export Directory', subtype='DIR_PATH')
-
-    asset_lib: StringProperty(name='Asset Library', subtype='DIR_PATH', update=update_asset)
+    column_count: IntProperty(name='Column', default=5, min=4)
+    # asset
+    asset_lib: StringProperty(name='Library', subtype='DIR_PATH')
 
     def draw(self, context):
         layout = self.layout
+        row = layout.row(align=True)
+        row.prop(self, 'ui', expand=True)
+        if self.ui == 'PROPERTY':
+            col = layout.column(align=True)
+            col.scale_y = 1.2
+            col.prop(self, 'category', icon='ALIGN_MIDDLE')
+            col.prop(self, 'asset_lib', icon='COLOR')
+            col.separator()
+            col.prop(self, 'column_count')
+        else:
+            self.draw_url(context, layout)
 
-        col = layout.column(align=True)
-        col.scale_y = 1.2
-        col.prop(self, 'category', icon='ALIGN_MIDDLE')
-        col.prop(self, 'directory', icon='EXPORT')
-        col.prop(self, 'asset_lib', icon='COLOR')
+    def draw_url(self, context, layout):
+        box = layout.box()
+        box.label(text='Sponsor: 只剩一瓶辣椒酱', icon='FUND')
+        row = box.row()
+        row.operator('wm.url_open', text='斑斓魔法CG官网', icon='URL').url = 'https://www.blendermagic.cn/'
+        row.operator('wm.url_open', text='辣椒B站频道',
+                     icon='URL').url = 'https://space.bilibili.com/35723238'
+
+        box.label(text='Developer: Atticus', icon='SCRIPT')
+        row = box.row()
+        row.operator('wm.url_open', text='Atticus Github', icon='URL').url = 'https://github.com/atticus-lv'
+        row.operator('wm.url_open', text='AtticusB站频道',
+                     icon='URL').url = 'https://space.bilibili.com/1509173'
 
 
 class CH_OT_load_asset(bpy.types.Operator):
     bl_idname = 'ch.load_asset'
-    bl_label = 'Load Asset'
+    bl_label = 'Load Lib'
 
     def execute(self, context):
         base_dir = load_asset()
 
         self.report({'INFO' if base_dir else 'ERROR'},
-                    f'Load asset from {base_dir}' if base_dir else f'Asset path error: {base_dir}')
+                    f'Load Lib from {base_dir}' if base_dir else f'Asset path error: {base_dir}')
         return {'FINISHED'}
 
 
@@ -167,4 +191,3 @@ def unregister():
 
     for cls in classes:
         bpy.utils.unregister_class(cls)
-
