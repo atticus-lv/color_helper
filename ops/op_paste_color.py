@@ -83,13 +83,20 @@ class WM_MT_button_context(bpy.types.Menu):
         pass
 
 
+def add_menu():
+    bpy.utils.register_class(WM_MT_button_context)
+    bpy.types.WM_MT_button_context.append(context_menu_func)
+
+
 def register():
     bpy.utils.register_class(CH_OT_paste_color)
     bpy.utils.register_class(CH_OT_paste_and_add_color)
 
-    if not hasattr(bpy.types, 'WM_MT_button_context'):
-        bpy.utils.register_class(WM_MT_button_context)
-        bpy.types.WM_MT_button_context.append(context_menu_func)
+    if bpy.app.version < (3, 1, 0):
+        if not hasattr(bpy.types, 'WM_MT_button_context'):
+            add_menu()
+    else:
+        add_menu()
 
 
 def unregister():

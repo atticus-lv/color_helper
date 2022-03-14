@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import *
+from ..preferences import get_pref
 
 
 def get_coll_active():
@@ -118,6 +119,12 @@ class CH_OT_palette_toggler(bpy.types.Operator):
         return {"FINISHED"}
 
 
+from .icon_utils import RSN_Preview
+
+logo = RSN_Preview('logo.png', 'logo')
+logo.register()
+
+
 class SidePanelBase:
     bl_label = 'Color Helper'
     bl_category = 'CH'
@@ -137,14 +144,22 @@ class SidePanelBase:
     def draw_header(self, context):
         layout = self.layout
         layout.alignment = "RIGHT"
-        layout.operator('ch.load_asset', icon='COLOR')
+        layout.operator('ch.load_asset', icon_value=logo.get_image_icon_id())
         layout.separator()
 
     def draw_palette_color(self, layout, palette, palette_index):
+        pref = get_pref()
         row = layout.row(align=True)
         row.scale_y = 1.5
+
         for i, color in enumerate(palette.colors):
+            cur_line = i // pref.column_count
+
             col = row.column(align=True)
+
+            for i in range(0, cur_line + 1):
+                col = row.column(align=True)
+
             col.prop(color, 'color')
             if palette.edit_mode:
                 r = col.column(align=True)
@@ -167,13 +182,13 @@ class SidePanelBase:
 
             row = layout.row()
             # row.operator('ch.create_palette_from_palette', icon='COLORSET_13_VEC', text='')
-            row = row.row(align = True)
+            row = row.row(align=True)
             row.scale_y = 1.25
             row.scale_x = 1.1
-            row.prop(context.window_manager, 'ch_show_palette_name' ,icon = 'EVENT_N',text = '')
-            row.operator('ch.palette_toggler',text = '',icon = 'FULLSCREEN_ENTER')
+            row.prop(context.window_manager, 'ch_show_palette_name', icon='EVENT_N', text='')
+            row.operator('ch.palette_toggler', text='', icon='FULLSCREEN_ENTER')
 
-            row.separator(factor = 5)
+            row.separator(factor=5)
             row.prop(context.scene, 'ch_palette_enum_collection', text='', icon='COLOR')
 
             row = row.row()
@@ -292,6 +307,8 @@ def register():
 
 
 def unregister():
+    logo.unregister()
+
     bpy.utils.unregister_class(CH_OT_select_collection)
     bpy.utils.unregister_class(CH_MT_collection_switcher)
     bpy.utils.unregister_class(CH_PT_collection_manager)
