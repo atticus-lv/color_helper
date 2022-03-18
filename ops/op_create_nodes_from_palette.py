@@ -48,7 +48,11 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
         loc_x, loc_y = 0, 0
 
         node_output = nt.nodes.new('NodeGroupOutput')
+        node_output.location = len(palette.colors) * 150 + 200, 0
 
+        node_input = nt.nodes.new('NodeGroupInput')
+        node_input.location = (len(palette.colors) - 2) * 150, -(len(palette.colors) + 3) * 50
+        # RGB nodes
         for i, color_item in enumerate(palette.colors):
             color = color_item.color
             node = nt.nodes.new('ShaderNodeRGB')
@@ -56,7 +60,21 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             node.location = loc_x + i * 150, loc_y - i * 50
             nt.links.new(node.outputs[0], node_output.inputs[i])
 
-        node_output.location = len(palette.colors) * 150 + 200, 0
+        # ramp node
+        node_ramp = nt.nodes.new(type="ShaderNodeValToRGB")
+        node_ramp.location = node_input.location[0] + 200, node_input.location[1]
+        node_ramp.color_ramp.elements.remove(node_ramp.color_ramp.elements[0])
+        node_ramp.color_ramp.elements[0].position = 0
+
+        for i, color in enumerate(palette.colors):
+            if i > 0:
+                node_ramp.color_ramp.elements.new(position=1 / (len(palette.colors) - 1) * i)
+            node_ramp.color_ramp.elements[i].color = color.color
+
+        nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
+        nt.links.new(node_ramp.outputs[0], node_output.inputs[len(palette.colors)])
+        nt.outputs[-1].name = 'Ramp'
+        nt.inputs[0].name = 'Ramp Fac'
 
         # Create Node Group
         if not create: return
