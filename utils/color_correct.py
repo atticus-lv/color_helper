@@ -45,6 +45,8 @@ def rgb_str_to_rgba(rgb_str, alpha=1, has_prefix=True):
 
 
 ######################
+# String Convert
+######################
 import re
 
 rules = {
@@ -78,3 +80,90 @@ class Str2Color():
         for k, v in rules.items():
             m_obj = re.match(v, self.string)
             if m_obj: return k, m_obj.group(0)
+
+
+######################
+# Lab Convert
+######################
+
+white_points = {
+    'D50': [0.9642, 1.0000, 0.8251],
+    'D55': [0.9568, 1.0000, 0.9214],
+    'D65': [0.9504, 1.0000, 1.0888],
+
+}
+
+
+def rgb2lab(inputColor, srgb=False, white_point='D55'):
+    if srgb is True:
+        RGB = srgb_2_linear(inputColor)
+    else:
+        RGB = inputColor
+
+    XYZ = [0, 0, 0, ]
+
+    X = RGB[0] * 0.4124 + RGB[1] * 0.3576 + RGB[2] * 0.1805
+    Y = RGB[0] * 0.2126 + RGB[1] * 0.7152 + RGB[2] * 0.0722
+    Z = RGB[0] * 0.0193 + RGB[1] * 0.1192 + RGB[2] * 0.9505
+
+    XYZ[0] = round(X, 4)
+    XYZ[1] = round(Y, 4)
+    XYZ[2] = round(Z, 4)
+
+    wp_xyz = white_points[white_point]
+
+    XYZ[0] = float(XYZ[0]) / wp_xyz[0] * 100
+    XYZ[1] = float(XYZ[1]) / wp_xyz[1] * 100
+    XYZ[2] = float(XYZ[2]) / wp_xyz[2] * 100
+
+    for i, value in enumerate(XYZ):
+        if value > 0.008856:
+            value = value ** (1 / 3)
+        else:
+            value = (7.787 * value) + (16 / 116)
+
+        XYZ[i] = value
+
+    Lab = [0, 0, 0]
+
+    L = (116 * XYZ[1]) - 16
+    a = 500 * (XYZ[0] - XYZ[1])
+    b = 200 * (XYZ[1] - XYZ[2])
+
+    Lab[0] = round(L, 4)
+    Lab[1] = round(a, 4)
+    Lab[2] = round(b, 4)
+
+    return Lab
+
+
+import numpy as np
+
+
+def find_closest_lab_color(colors_list, color):
+    colors = np.array(colors_list)
+    color = np.array(color)
+    distances = np.sqrt(np.sum((colors_list - color) ** 2, axis=1))
+    index_of_smallest = np.where(distances == np.amin(distances))
+    smallest_distance = colors[index_of_smallest]
+    return index_of_smallest, smallest_distance[0]
+
+
+import os
+
+
+def find_closest_pantone(rgb, white_point='D55'):
+    import json
+    dict_file = os.path.join(os.path.dirname(__file__), 'lib', 'pantone_hex.json')
+    with open(dict_file) as f:
+        pantone_dict = json.load(f)
+
+    pantone_names = list(pantone_dict.keys())
+    pantone_hex = list(pantone_dict.values())
+    pantone_rgb = [hex_to_rgba(value)[0:3] for value in pantone_hex]
+    pantone_lab = [rgb2lab(value, white_point='D55') for value in pantone_rgb]
+
+    idx, lab_color = find_closest_lab_color(pantone_lab, rgb2lab(rgb, white_point='D55'))
+    idx = idx[0][0]
+
+    return (pantone_names[idx], pantone_rgb[idx])

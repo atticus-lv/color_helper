@@ -490,11 +490,94 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
         return {"FINISHED"}
 
 
+pantone_names = []
+
+
+def refresh_pantone(self, context):
+    global pantone_names
+    pantone_names.clear()
+
+    from ..utils.color_correct import find_closest_pantone
+
+    for color_item in self.temp_colors:
+        name, color = find_closest_pantone(color_item.color[0:3], white_point=self.white_point)
+        rgb = list(color)
+        rgb.append(1)
+
+        pantone_names.append(name)
+        color_item.color = rgb
+
+
+class CH_OT_convert_pantone_color(bpy.types.Operator):
+    bl_idname = 'ch.convert_pantone_color'
+    bl_label = 'Convert to Pantone Color'
+    bl_options = {"REGISTER", "UNDO_GROUPED"}
+
+    temp_colors: CollectionProperty(type=TempColorProps)
+    src_palette = None
+    palette_index: IntProperty()
+
+    white_point: EnumProperty(items=[
+        ('D50', 'D50', ''),
+        ('D55', 'D55', ''),
+        ('D65', 'D65', ''),
+    ], default='D55', update=refresh_pantone)
+
+    @classmethod
+    def poll(cls, context):
+        return (
+                (context.area.ui_type == 'VIEW_3D') or
+                (hasattr(context.space_data, 'edit_tree') and
+                 context.space_data.edit_tree and
+                 context.space_data.edit_tree.bl_idname == 'ShaderNodeTree')
+        )
+
+    def invoke(self, context, event):
+        self.temp_colors.clear()
+        global pantone_names
+        pantone_names.clear()
+
+        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        self.src_palette = collection.palettes[self.palette_index]
+
+        for color_item in self.src_palette.colors:
+            clr = self.temp_colors.add()
+            clr.color = color_item.color
+
+        refresh_pantone(self, context)
+
+        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
+
+    def draw(self, context):
+        global pantone_names
+
+        layout = self.layout
+        layout.prop(self, 'white_point', text='White Point')
+
+        row = layout.row(align=True)
+        row.scale_y = 1.5
+
+        for i, color_item in enumerate(self.temp_colors):
+            row.prop(color_item, 'color')
+
+        row = layout.row(align=True)
+        for name in pantone_names:
+            row.label(text=name)
+
+    def execute(self, context):
+        refresh_pantone(self, context)
+        for i, color_item in enumerate(self.src_palette.colors):
+            color_item.color = self.temp_colors[i].color
+
+        return {"FINISHED"}
+
+
 def register():
     bpy.utils.register_class(CH_OT_shuffle_palette)
     bpy.utils.register_class(TempColorProps)
     bpy.utils.register_class(CH_OT_edit_color)
     bpy.utils.register_class(CH_OT_batch_generate_color)
+    bpy.utils.register_class(CH_OT_convert_pantone_color)
 
 
 def unregister():
@@ -502,3 +585,4 @@ def unregister():
     bpy.utils.unregister_class(TempColorProps)
     bpy.utils.unregister_class(CH_OT_edit_color)
     bpy.utils.unregister_class(CH_OT_batch_generate_color)
+    bpy.utils.unregister_class(CH_OT_convert_pantone_color)

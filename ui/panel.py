@@ -217,6 +217,7 @@ class SidePanelBase:
                     row.operator('ch.edit_color', icon='TOOL_SETTINGS',
                                  text='').palette_index = i
                     row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
+                    row.operator('ch.convert_pantone_color', icon='EVENT_P', text='').palette_index = i
                     row.separator()
 
                     row.prop(palette, 'node_group', text='')
