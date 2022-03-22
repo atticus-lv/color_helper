@@ -151,7 +151,7 @@ def find_closest_lab_color(colors_list, color):
 
 import os
 
-
+# library base on http://www.excaliburcreations.com/pantone.html
 def find_closest_pantone(rgb, white_point='D55'):
     import json
     dict_file = os.path.join(os.path.dirname(__file__), 'lib', 'pantone_hex.json')

@@ -511,7 +511,7 @@ def refresh_pantone(self, context):
 class CH_OT_convert_pantone_color(bpy.types.Operator):
     bl_idname = 'ch.convert_pantone_color'
     bl_label = 'Convert to Pantone Color'
-    bl_options = {"REGISTER", "UNDO_GROUPED"}
+    bl_options = {"REGISTER", "UNDO"}
 
     temp_colors: CollectionProperty(type=TempColorProps)
     src_palette = None
@@ -546,23 +546,41 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
 
         refresh_pantone(self, context)
 
-        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
+        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width))
 
     def draw(self, context):
         global pantone_names
 
-        layout = self.layout
-        layout.prop(self, 'white_point', text='White Point')
+        collection = context.scene.ch_palette_collection[context.scene.ch_palette_collection_index]
+        self.src_palette = collection.palettes[self.palette_index]
 
-        row = layout.row(align=True)
+        layout = self.layout
+
+        col = layout.column(align=True)
+
+        row = col.row(align=True)
         row.scale_y = 1.5
 
+        row.label(text='Origin')
+        for i, color_item in enumerate(self.src_palette.colors):
+            row.prop(color_item, 'color')
+
+        row = col.row(align=True)
+        row.scale_y = 1.5
+
+        row.label(text='Pantone')
         for i, color_item in enumerate(self.temp_colors):
             row.prop(color_item, 'color')
 
         row = layout.row(align=True)
+        row.label(text='Name')
         for name in pantone_names:
             row.label(text=name)
+
+        box = layout.box()
+        box.label(text='White Point')
+        row = box.row(align=True)
+        row.prop(self, 'white_point', expand=True)
 
     def execute(self, context):
         refresh_pantone(self, context)
