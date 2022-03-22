@@ -153,12 +153,7 @@ class SidePanelBase:
         row.scale_y = 1.5
 
         for i, color in enumerate(palette.colors):
-            cur_line = i // pref.column_count
-
             col = row.column(align=True)
-
-            for i in range(0, cur_line + 1):
-                col = row.column(align=True)
 
             col.prop(color, 'color')
             if palette.edit_mode:
