@@ -493,6 +493,21 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
 pantone_names = []
 
 
+class CH_OT_copy_pantone_names(bpy.types.Operator):
+    bl_idname = 'ch.copy_pantone_names'
+    bl_label = 'Copy'
+
+    def execute(self, context):
+        global pantone_names
+        s = ''
+        for name in pantone_names:
+            s += 'Pantone ' + name + '  ' if name.isdigit() else name + '  '
+
+        bpy.context.window_manager.clipboard = s
+
+        return {"FINISHED"}
+
+
 def refresh_pantone(self, context):
     global pantone_names
     pantone_names.clear()
@@ -517,7 +532,7 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
     src_palette = None
     palette_index: IntProperty()
 
-    white_point: EnumProperty(items=[
+    white_point: EnumProperty(name='White Point', items=[
         ('D50', 'D50', ''),
         ('D55', 'D55', ''),
         ('D65', 'D65', ''),
@@ -556,6 +571,9 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
 
         layout = self.layout
 
+        box = layout.box()
+        box.prop(self, 'white_point')
+
         col = layout.column(align=True)
 
         row = col.row(align=True)
@@ -577,10 +595,7 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
         for name in pantone_names:
             row.label(text=name)
 
-        box = layout.box()
-        box.label(text='White Point')
-        row = box.row(align=True)
-        row.prop(self, 'white_point', expand=True)
+        layout.operator('ch.copy_pantone_names', text='Copy Names', icon='PASTEFLIPUP')
 
     def execute(self, context):
         refresh_pantone(self, context)
@@ -596,6 +611,7 @@ def register():
     bpy.utils.register_class(CH_OT_edit_color)
     bpy.utils.register_class(CH_OT_batch_generate_color)
     bpy.utils.register_class(CH_OT_convert_pantone_color)
+    bpy.utils.register_class(CH_OT_copy_pantone_names)
 
 
 def unregister():
@@ -604,3 +620,4 @@ def unregister():
     bpy.utils.unregister_class(CH_OT_edit_color)
     bpy.utils.unregister_class(CH_OT_batch_generate_color)
     bpy.utils.unregister_class(CH_OT_convert_pantone_color)
+    bpy.utils.unregister_class(CH_OT_copy_pantone_names)
