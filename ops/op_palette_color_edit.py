@@ -566,7 +566,7 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
             row.prop(color_item, 'color')
 
         row = col.row(align=True)
-        row.scale_y = 1.5
+        row.scale_y = 2
 
         row.label(text='Pantone')
         for i, color_item in enumerate(self.temp_colors):
