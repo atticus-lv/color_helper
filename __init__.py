@@ -2,7 +2,7 @@ bl_info = {
     "name": "Color Helper",
     "author": "Atticus",
     "blender": (3, 0, 0),
-    "version": (0, 3, 1),
+    "version": (0, 4),
     "category": "Color",
     "support": "COMMUNITY",
     "doc_url": "",
