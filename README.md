@@ -16,6 +16,10 @@ https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 
 ### Log
 
+#### v0.4.1
++ fix uncorrectable name when create palette node group
++ add max return color preference
+
 #### v0.4
 + Add nearest Pantone color converter
   + library base on http://www.excaliburcreations.com/pantone.html

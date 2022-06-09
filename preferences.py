@@ -97,6 +97,8 @@ class CH_Preference(bpy.types.AddonPreferences):
     ])
     category: StringProperty(name="Category", default="CH", update=update_category)
     column_count: IntProperty(name='Column', default=5, min=4)
+
+    max_colors_return:IntProperty(name = 'Max Color Return',default=5,min=3)
     # asset
     asset_lib: StringProperty(name='Library', subtype='DIR_PATH')
 
@@ -110,7 +112,8 @@ class CH_Preference(bpy.types.AddonPreferences):
             col.prop(self, 'category', icon='ALIGN_MIDDLE')
             col.prop(self, 'asset_lib', icon='COLOR')
             col.separator()
-            col.prop(self, 'column_count')
+            # col.prop(self, 'column_count')
+            col.prop(self, 'max_colors_return')
         else:
             self.draw_url(context, layout)
 

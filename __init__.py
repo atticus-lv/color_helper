@@ -2,7 +2,7 @@ bl_info = {
     "name": "Color Helper",
     "author": "Atticus",
     "blender": (3, 0, 0),
-    "version": (0, 4),
+    "version": (0, 4, 1),
     "category": "Color",
     "support": "COMMUNITY",
     "doc_url": "",
@@ -46,6 +46,7 @@ for name in __dict__.values():
         globals()[name] = importlib.import_module(name)
         setattr(globals()[name], 'modules', __dict__)
 
+
 def register():
     for name in __dict__.values():
         if name in sys.modules and hasattr(sys.modules[name], 'register'):
@@ -58,7 +59,10 @@ def register():
 def unregister():
     for name in __dict__.values():
         if name in sys.modules and hasattr(sys.modules[name], 'unregister'):
-            sys.modules[name].unregister()
+            try:
+                sys.modules[name].unregister()
+            except Exception:
+                pass
 
 
 if __name__ == '__main__':

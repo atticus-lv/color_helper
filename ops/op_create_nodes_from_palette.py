@@ -73,7 +73,12 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
 
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
         nt.links.new(node_ramp.outputs[0], node_output.inputs[len(palette.colors)])
-        nt.outputs[-1].name = 'Ramp'
+
+        # correct names
+        for op in nt.outputs:
+            op.name = 'Color'
+        # correct the ramp output name
+        nt.outputs[len(palette.colors)].name = 'Ramp'
         nt.inputs[0].name = 'Ramp Fac'
 
         # Create Node Group

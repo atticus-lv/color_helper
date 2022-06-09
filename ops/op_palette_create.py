@@ -2,6 +2,7 @@ import bpy
 import os
 from bpy.props import EnumProperty, StringProperty, CollectionProperty
 from bpy_extras.io_utils import ExportHelper, ImportHelper
+from ..preferences import get_pref
 
 
 class CreatePaletteBase:
@@ -90,7 +91,7 @@ class CH_OT_create_palette_from_clipboard(CreatePaletteBase, bpy.types.Operator)
         if channel_count not in [3, 4]:
             return self._return(
                 error_msg=f"This image has {channel_count} channels, but this method can only handle 3 or 4 channels")
-        palette = extract_from_image(image)
+        palette = extract_from_image(image,max_colors_to_return=get_pref().max_colors_return)
 
         self.create_palette(palette)
 

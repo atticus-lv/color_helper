@@ -54,11 +54,10 @@ def extract_from_palette(image):
     return colors
 
 
-def extract_from_image(image):
+def extract_from_image(image,max_colors_to_return = 5):
     """
     Use the user preferences to determine colors
     """
-    max_colors_to_return = 5
     determine_distinct_colors = 0.05
     pixel_threshold = 800
     ignore_alpha_below = 1
