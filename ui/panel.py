@@ -86,7 +86,7 @@ class CH_OT_palette_extra_op_caller(bpy.types.Operator):
                             text='Create Palette Image',
                             icon='COLORSET_13_VEC'
                             ).palette_index = index
-
+            layout.operator('ch.create_paint_palette', icon='COLOR').palette_index = index
             layout.separator()
 
             layout.operator('ch.copy_palette', icon='DUPLICATE').palette_index = index

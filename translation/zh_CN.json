@@ -14,5 +14,7 @@
   "Extra": "其他",
   "Create Ramp Node": "创建渐变节点",
   "Create Palette Image": "创建色卡图像",
+  "Create Paint Palette": "创建绘制调色板",
+  "Paint palette created": "绘制调色板创建完毕",
   "Export All Palette": "导出全部调色板"
 }
