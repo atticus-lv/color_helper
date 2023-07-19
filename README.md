@@ -16,6 +16,9 @@ https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 
 ### Log
 
+#### v0.4.2
++ add support for blender 3.5/3.6
+
 #### v0.4.1
 + fix uncorrectable name when create palette node group
 + add max return color preference
