@@ -58,6 +58,10 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             node = nt.nodes.new('ShaderNodeRGB')
             node.outputs[0].default_value = color
             node.location = loc_x + i * 150, loc_y - i * 50
+
+            if bpy.app.version >= (3, 5, 0):
+                nt.outputs.new('NodeSocketColor', 'Color')
+
             nt.links.new(node.outputs[0], node_output.inputs[i])
 
         # ramp node
@@ -70,6 +74,10 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             if i > 0:
                 node_ramp.color_ramp.elements.new(position=1 / (len(palette.colors) - 1) * i)
             node_ramp.color_ramp.elements[i].color = color.color
+
+        if bpy.app.version >= (3, 5, 0):
+            nt.inputs.new('NodeSocketFloat', 'Color')
+            nt.outputs.new('NodeSocketColor', 'Color')
 
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
         nt.links.new(node_ramp.outputs[0], node_output.inputs[len(palette.colors)])
