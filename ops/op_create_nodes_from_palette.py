@@ -41,10 +41,10 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             nt = palette.node_group
             for node in nt.nodes:
                 nt.nodes.remove(node)
-            # 上面虽然删除了节点组里所有节点，包括组输出节点，但节点组的输出端口还是在的，用下面的方法删除输出端
+            #上面虽然删除了节点组里所有节点，包括组输出节点，但节点组的输出端口还是在的，用下面的方法删除输出端
             for item in nt.interface.items_tree:
                 if item.item_type == 'SOCKET':
-                    if item.in_out == 'OUTPUT' or item.in_out == 'INPUT':
+                    if item.in_out == 'OUTPUT'or item.in_out == 'INPUT':
                         nt.interface.remove(item)
 
         else:
@@ -63,10 +63,9 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             colornode.outputs[0].default_value = color
             colornode.location = loc_x + i * 150, loc_y - i * 50
 
-            # 添加颜色输出端口，端口名加上序号，方便知道那个端口是色板里第几个颜色
+            #添加颜色输出端口，端口名加上序号，方便知道那个端口是色板里第几个颜色
             if bpy.app.version >= (4, 0, 0):
-                nt.interface.new_socket(name="Color" + "  _" + str(i + 1), in_out='OUTPUT',
-                                        socket_type='NodeSocketColor')
+                nt.interface.new_socket(name="Color"+"  _"+str(i+1), in_out='OUTPUT',socket_type='NodeSocketColor')
 
             nt.links.new(colornode.outputs[0], node_output.inputs[i])
 
@@ -79,10 +78,10 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
                 node_ramp.color_ramp.elements.new(position=1 / (len(palette.colors) - 1) * i)
             node_ramp.color_ramp.elements[i].color = color_item.color
 
-        # 改为4.0的新增渐变的端口
+        #改为4.0的新增渐变的端口
         if bpy.app.version >= (4, 0, 0):
-            nt.interface.new_socket(name="Ramp Fac", in_out='INPUT', socket_type='NodeSocketFloat')
-            nt.interface.new_socket(name="Ramp", in_out='OUTPUT', socket_type='NodeSocketColor')
+            nt.interface.new_socket(name="Ramp Fac", in_out='INPUT',socket_type='NodeSocketFloat')
+            nt.interface.new_socket(name="Ramp", in_out='OUTPUT',socket_type='NodeSocketColor')
 
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
         nt.links.new(node_ramp.outputs[0], node_output.inputs["Ramp"])

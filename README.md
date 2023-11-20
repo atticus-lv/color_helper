@@ -20,7 +20,7 @@ https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 + support blender 4.0
 + remove support of lower version
 
-### v0.4.2
+#### v0.4.2
 + add support for blender 3.5/3.6
 
 #### v0.4.1
