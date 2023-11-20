@@ -319,7 +319,7 @@ GENERATE_RULES = [
     ('2', 'Complementary', ''),
     ('3', 'Split Complementary', ''),
     ('4', 'Shades', ''),
-    ('5', 'Random', '')
+    ('5', 'Random', ''),  # remove later
 ]
 
 
@@ -561,7 +561,7 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
 
         refresh_pantone(self, context)
 
-        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width))
+        return context.window_manager.invoke_props_dialog(self, width=int(context.region.width / 2))
 
     def draw(self, context):
         global pantone_names
@@ -603,6 +603,10 @@ class CH_OT_convert_pantone_color(bpy.types.Operator):
             color_item.color = self.temp_colors[i].color
 
         return {"FINISHED"}
+
+
+
+
 
 
 def register():

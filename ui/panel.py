@@ -238,6 +238,7 @@ class SidePanelBase:
         add.box().operator('ch.create_palette_from_clipboard', icon='PASTEDOWN', emboss=False, text='Paste')
 
         add.box().operator('ch.batch_generate_color', icon='RENDER_RESULT', emboss=False, )
+        add.box().operator('ch.palette_from_ai', text='Generate', icon='EVENT_A', emboss=False)
 
     def draw(self, context):
         layout = self.layout
