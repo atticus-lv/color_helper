@@ -10,11 +10,15 @@
 + Nearest Pantone color converter
 
 ### Download
-> v0.4
+> v0.5
 
 https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 
 ### Log
+
+### v0.5
++ support blender 4.0
++ remove support of lower version
 
 #### v0.4.2
 + add support for blender 3.5/3.6
