@@ -41,52 +41,60 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
             nt = palette.node_group
             for node in nt.nodes:
                 nt.nodes.remove(node)
+            # 上面虽然删除了节点组里所有节点，包括组输出节点，但节点组的输出端口还是在的，用下面的方法删除输出端
+            for item in nt.interface.items_tree:
+                if item.item_type == 'SOCKET':
+                    if item.in_out == 'OUTPUT' or item.in_out == 'INPUT':
+                        nt.interface.remove(item)
+
         else:
             nt = bpy.data.node_groups.new(palette.name, 'ShaderNodeTree')
             palette.node_group = nt
 
         loc_x, loc_y = 0, 0
-
         node_output = nt.nodes.new('NodeGroupOutput')
         node_output.location = len(palette.colors) * 150 + 200, 0
-
         node_input = nt.nodes.new('NodeGroupInput')
         node_input.location = (len(palette.colors) - 2) * 150, -(len(palette.colors) + 3) * 50
-        # RGB nodes
-        for i, color_item in enumerate(palette.colors):
-            color = color_item.color
-            node = nt.nodes.new('ShaderNodeRGB')
-            node.outputs[0].default_value = color
-            node.location = loc_x + i * 150, loc_y - i * 50
-            nt.links.new(node.outputs[0], node_output.inputs[i])
 
-        # ramp node
+        for i, color in enumerate(palette.colors):
+            color = color.color
+            colornode = nt.nodes.new('ShaderNodeRGB')
+            colornode.outputs[0].default_value = color
+            colornode.location = loc_x + i * 150, loc_y - i * 50
+
+            # 添加颜色输出端口，端口名加上序号，方便知道那个端口是色板里第几个颜色
+            if bpy.app.version >= (4, 0, 0):
+                nt.interface.new_socket(name="Color" + "  _" + str(i + 1), in_out='OUTPUT',
+                                        socket_type='NodeSocketColor')
+
+            nt.links.new(colornode.outputs[0], node_output.inputs[i])
+
         node_ramp = nt.nodes.new(type="ShaderNodeValToRGB")
         node_ramp.location = node_input.location[0] + 200, node_input.location[1]
         node_ramp.color_ramp.elements.remove(node_ramp.color_ramp.elements[0])
         node_ramp.color_ramp.elements[0].position = 0
-
-        for i, color in enumerate(palette.colors):
+        for i, color_item in enumerate(palette.colors):
             if i > 0:
                 node_ramp.color_ramp.elements.new(position=1 / (len(palette.colors) - 1) * i)
-            node_ramp.color_ramp.elements[i].color = color.color
+            node_ramp.color_ramp.elements[i].color = color_item.color
+
+        # 改为4.0的新增渐变的端口
+        if bpy.app.version >= (4, 0, 0):
+            nt.interface.new_socket(name="Ramp Fac", in_out='INPUT', socket_type='NodeSocketFloat')
+            nt.interface.new_socket(name="Ramp", in_out='OUTPUT', socket_type='NodeSocketColor')
 
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
-        nt.links.new(node_ramp.outputs[0], node_output.inputs[len(palette.colors)])
+        nt.links.new(node_ramp.outputs[0], node_output.inputs["Ramp"])
 
-        # correct names
-        for op in nt.outputs:
-            op.name = 'Color'
-        # correct the ramp output name
-        nt.outputs[len(palette.colors)].name = 'Ramp'
-        nt.inputs[0].name = 'Ramp Fac'
-
-        # Create Node Group
         if not create: return
+        # 检查当前操作空间是否是在材质节点编辑器里
+        if bpy.context.area.type != 'NODE_EDITOR' or bpy.context.space_data.tree_type != 'ShaderNodeTree':
+            self.report({'WARNING'}, "在节点编辑器里按Shift后才会自动添加节点组！")
+            return
 
         loc_x, loc_y = bpy.context.space_data.cursor_location
         bpy.ops.node.select_all(action='DESELECT')
-
         edit_tree = bpy.context.space_data.edit_tree
 
         if edit_tree != nt and not (edit_tree.nodes.active and
@@ -94,6 +102,7 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
                                     getattr(edit_tree.nodes.active, 'node_tree') == nt):
             group_node = edit_tree.nodes.new('ShaderNodeGroup')
             group_node.node_tree = nt
+
             group_node.location = loc_x - bpy.context.region.width, loc_y
 
             bpy.ops.transform.translate('INVOKE_DEFAULT')
