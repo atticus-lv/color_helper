@@ -16,9 +16,10 @@ https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 
 ### Log
 
-### v0.5
+### v0.52
 + support blender 4.0
 + remove support of lower version
++ auto convert old palette node group to new version with index
 
 #### v0.4.2
 + add support for blender 3.5/3.6
