@@ -36,58 +36,56 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
         self.create_node_group(palette, create=event.shift)
         return {'FINISHED'}
 
-    def create_node_group(self, palette, create):
+    def ensure_palette_node_group(self, palette):
         if palette.node_group is not None:
             nt = palette.node_group
             for node in nt.nodes:
                 nt.nodes.remove(node)
-            #上面虽然删除了节点组里所有节点，包括组输出节点，但节点组的输出端口还是在的，用下面的方法删除输出端
-            for item in nt.interface.items_tree:
-                if item.item_type == 'SOCKET':
-                    if item.in_out == 'OUTPUT'or item.in_out == 'INPUT':
-                        nt.interface.remove(item)
-
         else:
             nt = bpy.data.node_groups.new(palette.name, 'ShaderNodeTree')
             palette.node_group = nt
 
-        loc_x, loc_y = 0, 0
-        node_output = nt.nodes.new('NodeGroupOutput')
-        node_output.location = len(palette.colors) * 150 + 200, 0
-        node_input = nt.nodes.new('NodeGroupInput')
-        node_input.location = (len(palette.colors) - 2) * 150, -(len(palette.colors) + 3) * 50
+        return nt
 
-        for i, color in enumerate(palette.colors):
-            color = color.color
-            colornode = nt.nodes.new('ShaderNodeRGB')
-            colornode.outputs[0].default_value = color
-            colornode.location = loc_x + i * 150, loc_y - i * 50
+    def create_node_group(self, palette, create):
+        from ..utils.nt_helper import CH_NodeTreeHelper as CH
 
-            #添加颜色输出端口，端口名加上序号，方便知道那个端口是色板里第几个颜色
-            if bpy.app.version >= (4, 0, 0):
-                nt.interface.new_socket(name="Color"+"  _"+str(i+1), in_out='OUTPUT',socket_type='NodeSocketColor')
+        NAME_RAMP_FAC = 'Ramp Fac'
+        NAME_RAMP = 'Ramp'
+        SEP_X = 150
+        SEP_Y = 50
 
-            nt.links.new(colornode.outputs[0], node_output.inputs[i])
+        nt = self.ensure_palette_node_group(palette)
+        colors = [item.color for item in palette.colors]
+        # make nodes
+        rgb_nodes = CH.rgb_nodes_from_colors(nt, colors)
+        node_input, node_output = CH.ensure_node_group_inout(nt)
+        node_ramp = CH.ramp_node_from_colors(nt, colors)
+        # set location for better view
+        CH.offset_nodes(rgb_nodes, offset=(SEP_X, SEP_Y))
+        node_output.location = len(palette.colors) * SEP_X + SEP_X, 0
+        node_input.location = (len(palette.colors) - 2) * SEP_X, -(len(palette.colors) + 3) * SEP_Y
+        node_ramp.location = node_input.location[0] + SEP_X, node_input.location[1]
+        # interface items / links
+        for i, rgb_node in enumerate(rgb_nodes):
+            name = f'Color_{i + 1}'
+            CH.ensure_interface_item(nt, name, 'OUTPUT', 'NodeSocketColor')
 
-        node_ramp = nt.nodes.new(type="ShaderNodeValToRGB")
-        node_ramp.location = node_input.location[0] + 200, node_input.location[1]
-        node_ramp.color_ramp.elements.remove(node_ramp.color_ramp.elements[0])
-        node_ramp.color_ramp.elements[0].position = 0
-        for i, color_item in enumerate(palette.colors):
-            if i > 0:
-                node_ramp.color_ramp.elements.new(position=1 / (len(palette.colors) - 1) * i)
-            node_ramp.color_ramp.elements[i].color = color_item.color
+            nt.links.new(rgb_node.outputs[0], node_output.inputs[name])
 
-        #改为4.0的新增渐变的端口
-        if bpy.app.version >= (4, 0, 0):
-            nt.interface.new_socket(name="Ramp Fac", in_out='INPUT',socket_type='NodeSocketFloat')
-            nt.interface.new_socket(name="Ramp", in_out='OUTPUT',socket_type='NodeSocketColor')
+        ramp_item = CH.ensure_interface_item(nt, NAME_RAMP, 'OUTPUT', 'NodeSocketColor')
+        nt.interface.move(ramp_item, -1)  # move to top
 
+        CH.ensure_interface_item(nt, NAME_RAMP_FAC, 'INPUT', 'NodeSocketFloat')
+
+        nt.links.new(node_ramp.outputs[0], node_output.inputs[NAME_RAMP])
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
-        nt.links.new(node_ramp.outputs[0], node_output.inputs["Ramp"])
 
         if not create: return
         # 检查当前操作空间是否是在材质节点编辑器里
+        self.move_nodes(nt)
+
+    def move_nodes(self, nt):
         if bpy.context.area.type != 'NODE_EDITOR' or bpy.context.space_data.tree_type != 'ShaderNodeTree':
             self.report({'WARNING'}, "在节点编辑器里按Shift后才会自动添加节点组！")
             return
@@ -96,9 +94,10 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
         bpy.ops.node.select_all(action='DESELECT')
         edit_tree = bpy.context.space_data.edit_tree
 
-        if edit_tree != nt and not (edit_tree.nodes.active and
-                                    hasattr(edit_tree.nodes.active, 'node_tree') and
-                                    getattr(edit_tree.nodes.active, 'node_tree') == nt):
+        if edit_tree is not nt and not (
+                edit_tree.nodes.active and
+                hasattr(edit_tree.nodes.active, 'node_tree') and
+                getattr(edit_tree.nodes.active, 'node_tree') is nt):
             group_node = edit_tree.nodes.new('ShaderNodeGroup')
             group_node.node_tree = nt
 
