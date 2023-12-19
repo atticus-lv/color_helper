@@ -57,6 +57,8 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
 
         nt = self.ensure_palette_node_group(palette)
         colors = [item.color for item in palette.colors]
+        # convert old version
+        self.convert_old_interface_items(nt, len(colors))
         # make nodes
         rgb_nodes = CH.rgb_nodes_from_colors(nt, colors)
         node_input, node_output = CH.ensure_node_group_inout(nt)
@@ -84,6 +86,20 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
         if not create: return
         # 检查当前操作空间是否是在材质节点编辑器里
         self.move_nodes(nt)
+
+    def convert_old_interface_items(self, nt, length):
+        """Convert the old version color node group to prevent cut links"""
+        import re
+        from ..utils.nt_helper import CH_NodeTreeHelper as CH
+
+        l = []
+        for item in CH._iter_node_interface(nt, type='OUTPUT'):
+            if item.name == 'Color' and item.socket_type == 'NodeSocketColor' and item.in_out == 'OUTPUT':
+                l.append(item)
+
+        if len(l) == length:
+            for i, item in enumerate(l):
+                item.name = f'Color_{i + 1}'
 
     def move_nodes(self, nt):
         if bpy.context.area.type != 'NODE_EDITOR' or bpy.context.space_data.tree_type != 'ShaderNodeTree':
