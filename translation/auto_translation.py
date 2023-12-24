@@ -1,4 +1,7 @@
 import bpy
+import json
+import os
+import importlib
 
 
 class TranslationHelper():
@@ -24,25 +27,23 @@ class TranslationHelper():
 
 # Set
 ############
-import os
-import json
+from . import zh_CN
 
-dir = os.path.dirname(__file__)
-help_classes = []
-
-for file in os.listdir(dir):
-    if not file.endswith('.json'): continue
-    with open(os.path.join(dir, file), 'r', encoding='utf-8') as f:
-        d = json.load(f)
-        help_cls = TranslationHelper('ch_' + file, d)
-        help_classes.append(help_cls)
+ch_zh_CN = TranslationHelper('ch_zh_CN', zh_CN.data)
+ch_zh_HANS = TranslationHelper('ch_zh_HANS', zh_CN.data, lang='zh_HANS')
 
 
 def register():
-    for cls in help_classes:
-        cls.register()
+    if bpy.app.version < (4, 0, 0):
+        ch_zh_CN.register()
+    else:
+        ch_zh_CN.register()
+        ch_zh_HANS.register()
 
 
 def unregister():
-    for cls in help_classes:
-        cls.unregister()
+    if bpy.app.version < (4, 0, 0):
+        ch_zh_CN.unregister()
+    else:
+        ch_zh_CN.unregister()
+        ch_zh_HANS.unregister()

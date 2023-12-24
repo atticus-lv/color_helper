@@ -1,4 +1,4 @@
-{
+data = {
   "Generate": "生成",
   "Load Lib": "加载资产",
   "Color Helper": "颜色助手",
