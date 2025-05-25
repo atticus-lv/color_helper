@@ -66,9 +66,12 @@ classes = (
     PaletteCollectionProps
 )
 
+ENUM_COLLECTION = []
 
 def enum_collection_callback(self, context):
-    return [(f'{i}', collection.name, '') for i, collection in enumerate(context.scene.ch_palette_collection)]
+    global ENUM_COLLECTION
+    ENUM_COLLECTION = [(f'{i}', collection.name, '') for i, collection in enumerate(context.scene.ch_palette_collection)]
+    return ENUM_COLLECTION
 
 
 def update_enum_collection(self, context):
