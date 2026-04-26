@@ -1,42 +1,28 @@
-bl_info = {
-    "name": "Color Helper",
-    "author": "Atticus",
-    "blender": (4, 0, 0),
-    "version": (0, 5, 2),
-    "category": "Color",
-    "support": "COMMUNITY",
-    "doc_url": "",
-    "tracker_url": "",
-    "description": "",
-    'warning': "Alpha, Support Windows / MacOS",
-    "location": "3D View/Node Editor's N panel",
-}
-
 import importlib
-import sys
 import os
-from itertools import groupby
+import sys
 
-# get folder name
-__folder_name__ = __name__
+# Package name can be either "color_helper" for legacy add-on loading or
+# "bl_ext.<repository>.color_helper" when installed as a Blender Extension.
+__folder_name__ = __package__ or __name__
 __dict__ = {}
 
 addon_dir = os.path.dirname(__file__)
 
 # get all .py file dir
-py_paths = [os.path.join(root, f) for root, dirs, files in os.walk(addon_dir) for f in files if
-            f.endswith('.py') and f != '__init__.py']
+py_paths = [
+    os.path.join(root, f)
+    for root, dirs, files in os.walk(addon_dir)
+    for f in files
+    if f.endswith('.py') and f != '__init__.py'
+]
 
 for path in py_paths:
     name = os.path.basename(path)[:-3]
-    correct_path = path.replace('\\', '/')
-    # split dir with folder name
-    dir_list = [list(g) for k, g in groupby(correct_path.split('/'), lambda x: x == __folder_name__) if
-                not k]
-    # combine dir and make dict like this: 'name:folder.name'
-    if 'colorthief' not in dir_list[-1]:
-        r_name_raw = __folder_name__ + '.' + '.'.join(dir_list[-1])
-        __dict__[name] = r_name_raw[:-3]
+    module_parts = os.path.splitext(os.path.relpath(path, addon_dir))[0].split(os.sep)
+
+    if 'colorthief' not in module_parts:
+        __dict__[name] = __folder_name__ + '.' + '.'.join(module_parts)
 
 # auto reload
 for name in __dict__.values():

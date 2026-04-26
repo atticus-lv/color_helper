@@ -1,0 +1,28 @@
+# Python bytecode/cache
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+
+# Blender extension build output
+build/dist/
+*.zip
+
+# Editor / IDE project files
+.idea/
+.vscode/
+*.iml
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Blender backup / autosave files
+*.blend1
+*.blend2
+*.blend@
+*.blend~
