@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "color_helper"
-version = "0.7.0"
+version = "0.7.1"
 name = "Color Helper"
 tagline = "Palette and color workflow tools"
 maintainer = "Atticus"
@@ -13,7 +13,7 @@ type = "add-on"
 website = "https://github.com/atticus-lv/color_helper"
 tags = ["Material", "Node", "Paint"]
 
-blender_version_min = "4.2.0"
+blender_version_min = "4.5.0"
 
 license = [
   "SPDX:GPL-3.0-or-later",
@@ -37,4 +37,5 @@ paths_exclude_pattern = [
   "*.sublime-workspace",
   "*.zip",
   "build/",
+  "docs/",
 ]

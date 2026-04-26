@@ -1,7 +1,7 @@
 ## Color Helper(Blender addon)
 > Palette addon for blender
 
-![animation](res/animation.gif)
+![animation](docs/animation.gif)
 ### Feature
 + Clipboard (pixel/hex or rgb value string) image generation palette
 + Palette Dynamic Link Materials (node group)
