@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Atticus
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from ..ops.op_palette_export_ import COLOR_WIDTH, COLOR_HEIGHT
 from .color_correct import srgb_2_linear, linear_2_srgb
 

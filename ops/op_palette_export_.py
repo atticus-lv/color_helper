@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Atticus
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 import bpy
 import os
 from bpy.props import *

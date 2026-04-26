@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Atticus
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 data = {
   "Generate": "生成",
   "Load Lib": "加载资产",

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Atticus
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 import bpy
 from bpy.props import IntProperty, BoolProperty, CollectionProperty, FloatVectorProperty, FloatProperty, EnumProperty
 

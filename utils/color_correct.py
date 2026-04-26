@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Atticus
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # gamma correct
 ######################
 def srgb_2_linear(c, gamma=2.4):

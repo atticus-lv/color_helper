@@ -5,6 +5,9 @@ version = "0.7.0"
 name = "Color Helper"
 tagline = "Palette and color workflow tools"
 maintainer = "Atticus"
+copyright = [
+  "2026 Atticus",
+]
 type = "add-on"
 
 website = "https://github.com/atticus-lv/color_helper"
