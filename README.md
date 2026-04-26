@@ -9,12 +9,11 @@
 + Palette adjustment (hsv, finishing), asset loading and exporting
 + Nearest Pantone color converter
 
-### Download
-> v0.5
-
-https://github.com/atticus-lv/color_helper/archive/refs/heads/master.zip
 
 ### Log
+
+### v0.6
++ fix non-english locale issue in collection name 
 
 ### v0.52
 + support blender 4.0
