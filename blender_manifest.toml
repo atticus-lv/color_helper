@@ -21,7 +21,7 @@ license = [
 
 [permissions]
 files = "Import and export palette images and assets"
-clipboard = "Read and write color values from the clipboard"
+clipboard = "Read image and color values from the clipboard"
 
 [build]
 paths_exclude_pattern = [

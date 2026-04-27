@@ -1,95 +1,46 @@
 # SPDX-FileCopyrightText: 2026 Atticus
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import subprocess
 import bpy
-import sys
-import os
-
-TEMP_DIR = ''
 
 
-def get_dir():
-    global TEMP_DIR
-    if TEMP_DIR == '':
-        TEMP_DIR = os.path.join(os.path.expanduser('~'), 'color_helper_temp')
-        if not "color_helper_temp" in os.listdir(os.path.expanduser('~')):
-            os.makedirs(TEMP_DIR)
+class Clipboard:
+    """Read image data from Blender's native image clipboard."""
 
-    return TEMP_DIR
+    def pull_image_from_clipboard(self, context=None):
+        context = context or bpy.context
+        area = context.area
+        window = context.window
+        screen = context.screen
 
+        if area is None or window is None or screen is None:
+            return None
 
-class Clipboard():
+        old_area_type = area.type
+        old_ui_type = getattr(area, "ui_type", None)
+        images_before = set(bpy.data.images)
 
-    def __init__(self, file_urls=None):
-        if sys.platform not in {'win32', 'darwin'}:
-            raise EnvironmentError
+        try:
+            area.type = "IMAGE_EDITOR"
+            region = next((r for r in area.regions if r.type == "WINDOW"), None)
+            if region is None:
+                return None
 
-    # mac
-    def get_osascript_args(self, commands):
-        args = ["osascript"]
-        for command in commands:
-            args += ["-e", command]
-        return args
+            with context.temp_override(window=window, screen=screen, area=area, region=region):
+                result = bpy.ops.image.clipboard_paste()
 
-    # win
-    def get_args(self, script):
-        powershell_args = [
-            os.path.join(
-                os.getenv("SystemRoot"),
-                "System32",
-                "WindowsPowerShell",
-                "v1.0",
-                "powershell.exe",
-            ),
-            "-NoProfile",
-            "-NoLogo",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-        ]
-        script = (
-                "$OutputEncoding = "
-                "[System.Console]::OutputEncoding = "
-                "[System.Console]::InputEncoding = "
-                "[System.Text.Encoding]::UTF8; "
-                + "$PSDefaultParameterValues['*:Encoding'] = 'utf8'; "
-                + script
-        )
-        args = powershell_args + ["& { " + script + " }"]
-        return args
+            if "FINISHED" not in result:
+                return None
 
-    def execute_powershell(self, script):
-        parms = {
-            'args': self.get_args(script),
-            'encoding': 'utf-8',
-            'stdout': subprocess.PIPE,
-            'stderr': subprocess.PIPE,
-        }
-        popen = subprocess.Popen(**parms)
-        stdout, stderr = popen.communicate()
-        return popen, stdout, stderr
+            pasted_images = [image for image in bpy.data.images if image not in images_before]
+            if pasted_images:
+                return pasted_images[-1]
 
-    def pull_image_from_clipboard(self, save_name='ch_cache_image.png'):
-        filepath = os.path.join(get_dir(), save_name)
-        if sys.platform == 'win32':
-            image_script = (
-                "$image = Get-Clipboard -Format Image; "
-                f"if ($image) {{ $image.Save('{filepath}'); Write-Output 0 }}"
-            )
-
-            popen, stdout, stderr = self.execute_powershell(image_script)
-        elif sys.platform == 'darwin':
-            commands = [
-                "set pastedImage to "
-                f'(open for access POSIX file "{filepath}" with write permission)',
-                "try",
-                "    write (the clipboard as «class PNGf») to pastedImage",
-                "end try",
-                "close access pastedImage",
-            ]
-            popen = subprocess.Popen(self.get_osascript_args(commands))
-            stdout, stderr = popen.communicate()
-
-        # print(filepath, stdout, stderr)
-        return filepath
+            return None
+        finally:
+            area.type = old_area_type
+            if old_ui_type is not None and hasattr(area, "ui_type"):
+                try:
+                    area.ui_type = old_ui_type
+                except TypeError:
+                    pass

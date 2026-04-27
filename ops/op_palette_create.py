@@ -81,24 +81,22 @@ class CH_OT_create_palette_from_clipboard(CreatePaletteBase, bpy.types.Operator)
         from ..utils.clipboard import Clipboard
 
         clipboard = Clipboard()
-        filepath = clipboard.pull_image_from_clipboard()
+        image = clipboard.pull_image_from_clipboard(context)
 
-        if not os.path.exists(filepath) or not os.path.isfile(filepath):
-            return self._return(error_msg='Clipboard has no file')
+        if image is None:
+            return self._return(error_msg='Clipboard does not contain an image')
 
-        image = bpy.data.images.load(filepath, check_existing=False)
-        channel_count = image.channels
+        try:
+            channel_count = image.channels
 
-        if image.file_format not in ['JPEG', 'PNG']:
-            return self._return(error_msg=f'Currently, this only works for JPEG and PNG image files')
-        if channel_count not in [3, 4]:
-            return self._return(
-                error_msg=f"This image has {channel_count} channels, but this method can only handle 3 or 4 channels")
-        palette = extract_from_image(image,max_colors_to_return=get_pref().max_colors_return)
+            if channel_count not in [3, 4]:
+                return self._return(
+                    error_msg=f"This image has {channel_count} channels, but this method can only handle 3 or 4 channels")
+            palette = extract_from_image(image, max_colors_to_return=get_pref().max_colors_return)
 
-        self.create_palette(palette)
-
-        bpy.data.images.remove(image)
+            self.create_palette(palette)
+        finally:
+            bpy.data.images.remove(image)
 
         return {'FINISHED'}
 
