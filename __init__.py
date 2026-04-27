@@ -1,58 +1,64 @@
 # SPDX-FileCopyrightText: 2026 Atticus
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import importlib
-import os
-import sys
-
 # Package name can be either "color_helper" for legacy add-on loading or
 # "bl_ext.<repository>.color_helper" when installed as a Blender Extension.
 __folder_name__ = __package__ or __name__
-__dict__ = {}
 
-addon_dir = os.path.dirname(__file__)
+if "props_palette" in locals():
+    import importlib
 
-# get all .py file dir
-py_paths = [
-    os.path.join(root, f)
-    for root, dirs, files in os.walk(addon_dir)
-    for f in files
-    if f.endswith('.py') and f != '__init__.py'
-]
+    importlib.reload(props_palette)
+    importlib.reload(op_palette_manage)
+    importlib.reload(op_palette_create)
+    importlib.reload(op_paste_color)
+    importlib.reload(op_palette_color_edit)
+    importlib.reload(op_create_nodes_from_palette)
+    importlib.reload(op_create_paint_palette)
+    importlib.reload(op_palette_export)
+    importlib.reload(auto_translation)
+    importlib.reload(ui_panel)
+    importlib.reload(preferences)
+else:
+    from .props import palette as props_palette
 
-for path in py_paths:
-    name = os.path.basename(path)[:-3]
-    module_parts = os.path.splitext(os.path.relpath(path, addon_dir))[0].split(os.sep)
+    from .ops import op_palette_manage
+    from .ops import op_palette_create
+    from .ops import op_paste_color
+    from .ops import op_palette_color_edit
+    from .ops import op_create_nodes_from_palette
+    from .ops import op_create_paint_palette
+    from .ops import op_palette_export_ as op_palette_export
 
-    if 'colorthief' not in module_parts:
-        __dict__[name] = __folder_name__ + '.' + '.'.join(module_parts)
+    from .translation import auto_translation
+    from .ui import panel as ui_panel
+    from . import preferences
 
-# auto reload
-for name in __dict__.values():
-    if name in sys.modules:
-        importlib.reload(sys.modules[name])
-    else:
-        globals()[name] = importlib.import_module(name)
-        setattr(globals()[name], 'modules', __dict__)
+
+modules = (
+    props_palette,
+    op_palette_manage,
+    op_palette_create,
+    op_paste_color,
+    op_palette_color_edit,
+    op_create_nodes_from_palette,
+    op_create_paint_palette,
+    op_palette_export,
+    auto_translation,
+    ui_panel,
+    preferences,
+)
 
 
 def register():
-    for name in __dict__.values():
-        if name in sys.modules and hasattr(sys.modules[name], 'register'):
-            try:
-                sys.modules[name].register()
-            except ValueError:  # open template file may cause this problem
-                pass
+    for module in modules:
+        module.register()
 
 
 def unregister():
-    for name in __dict__.values():
-        if name in sys.modules and hasattr(sys.modules[name], 'unregister'):
-            try:
-                sys.modules[name].unregister()
-            except Exception:
-                pass
+    for module in reversed(modules):
+        module.unregister()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     register()
