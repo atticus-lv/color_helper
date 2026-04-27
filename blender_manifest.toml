@@ -22,7 +22,6 @@ license = [
 [permissions]
 files = "Import and export palette images and assets"
 clipboard = "Read and write color values from the clipboard"
-network = "Generate palettes with Colormind online service"
 
 [build]
 paths_exclude_pattern = [

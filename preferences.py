@@ -3,13 +3,10 @@
 
 import bpy
 import os
-from bpy.props import (EnumProperty,
-                       StringProperty,
-                       BoolProperty,
-                       CollectionProperty,
-                       IntProperty,
-                       FloatProperty,
-                       PointerProperty)
+from bpy.props import (
+    StringProperty,
+    IntProperty,
+)
 from bpy.types import PropertyGroup
 
 from . import __folder_name__
@@ -93,11 +90,6 @@ def update_asset(self, context):
 class CH_Preference(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    # ui
-    ui: EnumProperty(items=[
-        ('PROPERTY', 'Property', ''),
-        ('URL', 'Links', ''),
-    ])
     category: StringProperty(name="Category", default="CH", update=update_category)
     column_count: IntProperty(name='Column', default=5, min=4)
 
@@ -107,32 +99,13 @@ class CH_Preference(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        row = layout.row(align=True)
-        row.prop(self, 'ui', expand=True)
-        if self.ui == 'PROPERTY':
-            col = layout.column(align=True)
-            col.scale_y = 1.2
-            col.prop(self, 'category', icon='ALIGN_MIDDLE')
-            col.prop(self, 'asset_lib', icon='COLOR')
-            col.separator()
-            # col.prop(self, 'column_count')
-            col.prop(self, 'max_colors_return')
-        else:
-            self.draw_url(context, layout)
-
-    def draw_url(self, context, layout):
-        box = layout.box()
-        box.label(text='Sponsor: 只剩一瓶辣椒酱', icon='FUND')
-        row = box.row()
-        row.operator('wm.url_open', text='斑斓魔法CG官网', icon='URL').url = 'https://www.blendermagic.cn/'
-        row.operator('wm.url_open', text='辣椒B站频道',
-                     icon='URL').url = 'https://space.bilibili.com/35723238'
-
-        box.label(text='Developer: Atticus', icon='SCRIPT')
-        row = box.row()
-        row.operator('wm.url_open', text='Atticus Github', icon='URL').url = 'https://github.com/atticus-lv'
-        row.operator('wm.url_open', text='AtticusB站频道',
-                     icon='URL').url = 'https://space.bilibili.com/1509173'
+        col = layout.column(align=True)
+        col.scale_y = 1.2
+        col.prop(self, 'category', icon='ALIGN_MIDDLE')
+        col.prop(self, 'asset_lib', icon='COLOR')
+        col.separator()
+        # col.prop(self, 'column_count')
+        col.prop(self, 'max_colors_return')
 
 
 class CH_OT_load_asset(bpy.types.Operator):
