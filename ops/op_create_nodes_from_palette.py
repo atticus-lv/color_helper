@@ -87,7 +87,7 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
         nt.links.new(node_input.outputs[0], node_ramp.inputs[0])
 
         if not create: return
-        # 检查当前操作空间是否是在材质节点编辑器里
+        # Add the node group only when the current editor is a shader node editor.
         self.move_nodes(nt)
 
     def convert_old_interface_items(self, nt, length):
@@ -106,7 +106,7 @@ class CH_OT_create_nodes_from_palette(bpy.types.Operator):
 
     def move_nodes(self, nt):
         if bpy.context.area.type != 'NODE_EDITOR' or bpy.context.space_data.tree_type != 'ShaderNodeTree':
-            self.report({'WARNING'}, "在节点编辑器里按Shift后才会自动添加节点组！")
+            self.report({'WARNING'}, "Shift-click in the Shader Node Editor to add the node group automatically.")
             return
 
         loc_x, loc_y = bpy.context.space_data.cursor_location

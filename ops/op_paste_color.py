@@ -5,6 +5,42 @@ import bpy
 from bpy.props import IntProperty
 
 
+def resolve_rna_path(path):
+    if path.startswith('bpy.context.'):
+        return bpy.context.path_resolve(path[len('bpy.context.'):])
+
+    if path.startswith('bpy.data.'):
+        data_path = path[len('bpy.data.'):]
+        split_index = min(
+            (index for index in (data_path.find('.'), data_path.find('[')) if index != -1),
+            default=len(data_path),
+        )
+        collection_name = data_path[:split_index]
+        data_path = data_path[split_index:]
+        if data_path.startswith('.'):
+            data_path = data_path[1:]
+        collection = getattr(bpy.data, collection_name)
+        if not data_path:
+            return collection
+        if not data_path.startswith('['):
+            raise ValueError(f'Unsupported bpy.data path: {path}')
+
+        item_end = data_path.find(']')
+        item_key = data_path[1:item_end]
+        if item_key.startswith(("'", '"')) and item_key.endswith(("'", '"')):
+            item_key = item_key[1:-1]
+        else:
+            item_key = int(item_key)
+
+        data_block = collection[item_key]
+        data_path = data_path[item_end + 1:]
+        if data_path.startswith('.'):
+            data_path = data_path[1:]
+        return data_block.path_resolve(data_path) if data_path else data_block
+
+    raise ValueError(f'Unsupported RNA path: {path}')
+
+
 class CH_OT_paste_and_add_color(bpy.types.Operator):
     """Paste hex/rgb string from clipboard with Gamma correct"""
     bl_idname = 'ch.paste_and_add_color'
@@ -57,12 +93,13 @@ class CH_OT_paste_color(bpy.types.Operator):
         bpy.ops.ui.copy_data_path_button(full_path=True)
         full_path = context.window_manager.clipboard
         rna, prop = full_path.rsplit('.', 1)
+        data_block = resolve_rna_path(rna)
         # some property only accept rgb values
         try:
             try:
-                setattr(eval(rna), prop, CP.bl_color)
+                setattr(data_block, prop, CP.bl_color)
             except ValueError:
-                setattr(eval(rna), prop, CP.bl_color[:3])
+                setattr(data_block, prop, CP.bl_color[:3])
         except Exception as e:
             print(f'Paste Color Error:{e}')
         finally:  # restore clip board

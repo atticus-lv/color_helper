@@ -7,10 +7,8 @@ from bpy.props import (
     StringProperty,
     IntProperty,
 )
-from bpy.types import PropertyGroup
 
 from . import __folder_name__
-import rna_keymap_ui
 
 
 def get_pref():
@@ -39,12 +37,18 @@ def update_category(self, context):
 
 
 def load_asset():
-    import os
     from .utils.process_image import extract_from_palette
 
     base_dir = get_pref().asset_lib
-    print('Load Color Helper Asset: ', base_dir)
-    if not (os.path.exists(base_dir) and os.path.isdir(base_dir)): return
+    if not base_dir:
+        return None
+
+    base_dir = bpy.path.abspath(base_dir)
+    if not os.path.isdir(base_dir):
+        return None
+
+    loaded_count = 0
+    image_extensions = {'.png', '.jpg', '.jpeg'}
 
     for file in os.listdir(base_dir):
         image_dir = os.path.join(base_dir, file)
@@ -60,27 +64,33 @@ def load_asset():
         for img_name in os.listdir(image_dir):
             # check exist
             base, sep, ext = img_name.rpartition('.')
+            if f'.{ext.lower()}' not in image_extensions:
+                continue
 
             if base not in coll_item.palettes:
-                image = bpy.data.images.load(os.path.join(image_dir, img_name), check_existing=False)
-                # add palette
-                palette_item = coll_item.palettes.add()
-                palette_item.name = base
-                palette_item.hide = True
-                # add color
-                palette = extract_from_palette(image)
-                for i, color in enumerate(palette):
-                    clr = palette_item.colors.add()
-                    clr.color = color
-                # clear temp
-                bpy.data.images.remove(image)
+                image = None
+                try:
+                    image = bpy.data.images.load(os.path.join(image_dir, img_name), check_existing=False)
+                    # add palette
+                    palette_item = coll_item.palettes.add()
+                    palette_item.name = base
+                    palette_item.hide = True
+                    # add color
+                    palette = extract_from_palette(image)
+                    for i, color in enumerate(palette):
+                        clr = palette_item.colors.add()
+                        clr.color = color
+                    loaded_count += 1
+                finally:
+                    if image is not None:
+                        bpy.data.images.remove(image)
 
         if len(coll_item.palettes) == 0: bpy.context.scene.ch_palette_collection.remove(-1)
     # redraw
     for window in bpy.context.window_manager.windows:
         for area in window.screen.areas:
             area.tag_redraw()
-    return base_dir
+    return base_dir, loaded_count
 
 
 def update_asset(self, context):
@@ -95,7 +105,11 @@ class CH_Preference(bpy.types.AddonPreferences):
 
     max_colors_return:IntProperty(name = 'Max Color Return',default=5,min=3)
     # asset
-    asset_lib: StringProperty(name='Library', subtype='DIR_PATH')
+    asset_lib: StringProperty(
+        name='Palette Library Folder',
+        description='Optional folder containing palette image subfolders to import',
+        subtype='DIR_PATH',
+    )
 
     def draw(self, context):
         layout = self.layout
@@ -110,13 +124,17 @@ class CH_Preference(bpy.types.AddonPreferences):
 
 class CH_OT_load_asset(bpy.types.Operator):
     bl_idname = 'ch.load_asset'
-    bl_label = 'Load Lib'
+    bl_label = 'Load Palette Library'
 
     def execute(self, context):
-        base_dir = load_asset()
+        result = load_asset()
 
-        self.report({'INFO' if base_dir else 'ERROR'},
-                    f'Load Lib from {base_dir}' if base_dir else f'Asset path error: {base_dir}')
+        if result is None:
+            self.report({'INFO'}, 'No palette library folder is set')
+            return {'FINISHED'}
+
+        base_dir, loaded_count = result
+        self.report({'INFO'}, f'Loaded {loaded_count} palette images from {base_dir}')
         return {'FINISHED'}
 
 
@@ -168,5 +186,5 @@ def register():
 def unregister():
     remove_keybind()
 
-    for cls in classes:
+    for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

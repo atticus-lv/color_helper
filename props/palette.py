@@ -8,7 +8,7 @@ from bpy.types import PropertyGroup
 
 def update_color(self, context):
     path = self.color.path_from_id().split('.colors')[0]
-    palette = eval('bpy.context.scene' + '.' + path)
+    palette = context.scene.path_resolve(path)
     index = int(palette.path_from_id().split('.palettes')[-1][1:-1])
     if palette.node_group and palette.node_group_update:
         bpy.ops.ch.create_nodes_from_palette('INVOKE_DEFAULT', palette_index=index)
@@ -25,7 +25,7 @@ def poll_shader_tree(self, object):
 
 def correct_name(self, context):
     path = self.path_from_id().split('.palettes')[0]
-    collection = eval('bpy.context.scene' + '.' + path)
+    collection = context.scene.path_resolve(path)
     if self.name in collection.palettes:
         self.name += '_new'
 
@@ -38,7 +38,7 @@ class PaletteProps(PropertyGroup):
         old_name = self.get("name", 'Palette')
 
         path = self.path_from_id().split('.palettes')[0]
-        collection = eval('bpy.context.scene' + '.' + path)
+        collection = bpy.context.scene.path_resolve(path)
 
         if value in collection.palettes and value != old_name:
             value += '_new'
@@ -94,8 +94,9 @@ def register():
 
 
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
+    del bpy.types.Scene.ch_palette_enum_collection
     del bpy.types.Scene.ch_palette_collection
     del bpy.types.Scene.ch_palette_collection_index
+
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

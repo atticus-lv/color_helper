@@ -3,7 +3,7 @@
 
 data = {
   "Generate": "生成",
-  "Load Lib": "加载资产",
+  "Load Palette Library": "加载调色板库",
   "Color Helper": "颜色助手",
   "Analogous": "类比",
   "Monochromatic": "单色",

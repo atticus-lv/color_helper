@@ -31,19 +31,21 @@ def linear_2_srgb(c, gamma_value=2.4):
 def hex_to_rgba(hex_str, alpha=1):
     if hex_str.startswith('#'): hex_str = hex_str[1:]
 
-    hex = eval(f'0x{hex_str}')
-    r = (hex & 0xff0000) >> 16
-    g = (hex & 0x00ff00) >> 8
-    b = (hex & 0x0000ff)
+    hex_value = int(hex_str, 16)
+    r = (hex_value & 0xff0000) >> 16
+    g = (hex_value & 0x00ff00) >> 8
+    b = (hex_value & 0x0000ff)
 
     return tuple([srgb_2_linear(c / 0xff) for c in (r, g, b)] + [alpha])
 
 
 def rgb_str_to_rgba(rgb_str, alpha=1, has_prefix=True):
-    rgb = [c / 255 for c in eval(rgb_str[3:] if has_prefix else rgb_str)]
+    raw = rgb_str[3:] if has_prefix else rgb_str
+    numbers = [float(value) for value in re.findall(r'\d+(?:\.\d+)?', raw)]
+    rgb = [c / 255 for c in numbers[:3]]
     rgb = [srgb_2_linear(c) for c in rgb]
 
-    if len(rgb) == 3: rgb.append(alpha)
+    rgb.append(numbers[3] if len(numbers) > 3 else alpha)
     return rgb
 
 
