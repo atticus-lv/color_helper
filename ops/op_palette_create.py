@@ -78,13 +78,16 @@ class CH_OT_create_palette_from_clipboard(CreatePaletteBase, bpy.types.Operator)
 
     def execute(self, context):
         from ..utils.process_image import extract_from_image
-        from ..utils.clipboard import Clipboard
+        from ..utils.clipboard import Clipboard, ClipboardImageError
 
         clipboard = Clipboard()
-        image = clipboard.pull_image_from_clipboard(context)
+        try:
+            image = clipboard.pull_image_from_clipboard(context)
+        except ClipboardImageError as exc:
+            return self._return(error_msg=str(exc))
 
         if image is None:
-            return self._return(error_msg='Clipboard does not contain an image')
+            return self._return(error_msg='No image found on the clipboard. Copy an image first, then try Paste.')
 
         try:
             channel_count = image.channels

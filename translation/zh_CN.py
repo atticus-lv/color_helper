@@ -19,5 +19,8 @@ data = {
   "Create Palette Image": "创建色卡图像",
   "Create Paint Palette": "创建绘制调色板",
   "Paint palette created": "绘制调色板创建完毕",
-  "Export All Palette": "导出全部调色板"
+  "Export All Palette": "导出全部调色板",
+  "No compatible image found on the clipboard. Copy an image first, then try Paste.": "剪贴板中没有找到兼容的图像。请先复制一张图像，然后再点击粘贴。",
+  "No image found on the clipboard. Copy an image first, then try Paste.": "剪贴板中没有找到图像。请先复制一张图像，然后再点击粘贴。",
+  "Blender could not paste an image from the clipboard.": "Blender 无法从剪贴板粘贴图像。"
 }

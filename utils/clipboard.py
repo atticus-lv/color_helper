@@ -4,6 +4,10 @@
 import bpy
 
 
+class ClipboardImageError(Exception):
+    """Raised when Blender cannot read a compatible image from the clipboard."""
+
+
 class Clipboard:
     """Read image data from Blender's native image clipboard."""
 
@@ -27,7 +31,18 @@ class Clipboard:
                 return None
 
             with context.temp_override(window=window, screen=screen, area=area, region=region):
-                result = bpy.ops.image.clipboard_paste()
+                try:
+                    result = bpy.ops.image.clipboard_paste()
+                except RuntimeError as exc:
+                    message = str(exc)
+                    if "No compatible images are on the clipboard" in message:
+                        raise ClipboardImageError(
+                            "No compatible image found on the clipboard. Copy an image first, then try Paste."
+                        ) from None
+
+                    raise ClipboardImageError(
+                        "Blender could not paste an image from the clipboard."
+                    ) from None
 
             if "FINISHED" not in result:
                 return None
