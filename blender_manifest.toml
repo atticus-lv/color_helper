@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "color_helper"
-version = "0.7.1"
+version = "0.8.0"
 name = "Color Helper"
 tagline = "Palette and color workflow tools"
 maintainer = "Atticus"

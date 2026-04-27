@@ -38,6 +38,11 @@ It works from the 3D View and Shader Node Editor side panel, making color palett
 
 
 ### Log
+### v0.8.0
++ use Blender native collapsible layout panels for palettes
++ improve clipboard image paste error messages
++ keep collapsed palettes cleaner with name and color strip only
+
 ### v0.71
 + adapt to Blender Extension
 + add GPL license file
