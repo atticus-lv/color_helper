@@ -74,7 +74,7 @@ def load_asset():
                     # add palette
                     palette_item = coll_item.palettes.add()
                     palette_item.name = base
-                    palette_item.hide = True
+                    palette_item.expanded = False
                     # add color
                     palette = extract_from_palette(image)
                     for i, color in enumerate(palette):

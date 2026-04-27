@@ -45,6 +45,15 @@ class PaletteProps(PropertyGroup):
 
         self["name"] = value
 
+    def get_expanded(self):
+        if "expanded" in self:
+            return bool(self["expanded"])
+
+        return not self.hide
+
+    def set_expanded(self, value):
+        self["expanded"] = bool(value)
+
     name: StringProperty(name='Name', get=get_name, set=set_name)
     # name: StringProperty(name='Name', update=correct_name)
     colors: CollectionProperty(type=PaletteColorProps)
@@ -53,6 +62,7 @@ class PaletteProps(PropertyGroup):
     node_group_update: BoolProperty(name='Update Node Group', default=False)
     # UI
     edit_mode: BoolProperty(name='Edit', default=False)
+    expanded: BoolProperty(name='Expanded', get=get_expanded, set=set_expanded)
     hide: BoolProperty(name='Hide', default=False)
 
 

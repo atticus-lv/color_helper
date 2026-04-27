@@ -3,7 +3,6 @@
 
 import bpy
 from bpy.props import *
-from ..preferences import get_pref
 
 
 def get_coll_active():
@@ -114,10 +113,10 @@ class CH_OT_palette_toggler(bpy.types.Operator):
     def execute(self, context):
         coll = get_coll_active()
 
-        hide = coll.palettes[0].hide
+        expanded = coll.palettes[0].expanded
 
         for i, palette in enumerate(coll.palettes):
-            palette.hide = not hide
+            palette.expanded = not expanded
 
         return {"FINISHED"}
 
@@ -150,28 +149,61 @@ class SidePanelBase:
         layout.operator('ch.load_asset', icon_value=logo.get_image_icon_id())
         layout.separator()
 
-    def draw_palette_color(self, layout, palette, palette_index):
-        pref = get_pref()
+    def draw_palette_colors(self, layout, palette, palette_index, *, body=False, compact=False):
         row = layout.row(align=True)
-        row.scale_y = 1.5
+        row.scale_y = 0.75 if compact else 1.5
 
         for i, color in enumerate(palette.colors):
             col = row.column(align=True)
 
             col.prop(color, 'color')
-            if palette.edit_mode:
+            if body and palette.edit_mode:
                 r = col.column(align=True)
                 r.scale_y = 0.75
                 remove = r.operator('ch.remove_color', icon='REMOVE', text='')
                 remove.palette_index = palette_index
                 remove.color_index = i
 
-        if palette.hide: return
+        if not body:
+            return
+
         # extra
         row.operator('ch.add_color', icon='ADD',
                      text='' if len(palette.colors) != 0 else 'Add Color').palette_index = palette_index
         row.separator()
         row.prop(palette, 'edit_mode', icon='PREFERENCES', text='')
+
+    def draw_palette_header(self, layout, context, palette, palette_index, is_expanded):
+        row = layout.row(align=True)
+        show_name = is_expanded or context.window_manager.ch_show_palette_name
+        if show_name:
+            row.prop(palette, 'name', text='')
+            row.separator()
+
+        if not is_expanded:
+            self.draw_palette_colors(row, palette, palette_index, compact=True)
+            return
+
+        row.operator('ch.edit_color', icon='TOOL_SETTINGS',
+                     text='').palette_index = palette_index
+        row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = palette_index
+        row.operator('ch.convert_pantone_color', icon='EVENT_P', text='').palette_index = palette_index
+        row.separator()
+
+        row.prop(palette, 'node_group', text='')
+        node_icon = 'ADD' if not palette.node_group else 'FILE_REFRESH'
+
+        sub = row.row()
+        sub.alert = True if palette.node_group_update is True else False
+        sub.operator('ch.create_nodes_from_palette',
+                     icon=node_icon, text='').palette_index = palette_index
+
+        row.separator(factor=0.5)
+
+        row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = palette_index
+
+    def draw_palette_body(self, layout, palette, palette_index):
+        self.draw_palette_colors(layout, palette, palette_index, body=True)
 
     def draw_ui(self, context, layout):
 
@@ -193,45 +225,13 @@ class SidePanelBase:
             row.popover(panel='CH_PT_collection_manager', icon='PREFERENCES', text='')
 
             for i, palette in enumerate(collection.palettes):
-                col = layout.column().box()
-                row.operator_context = "INVOKE_DEFAULT"
+                layout.operator_context = "INVOKE_DEFAULT"
+                header, body = layout.panel_prop(palette, 'expanded')
 
-                row = col.row(align=True)
+                self.draw_palette_header(header, context, palette, i, body is not None)
 
-                row.prop(palette, 'hide', text='', icon='TRIA_RIGHT' if palette.hide else 'TRIA_DOWN', emboss=False)
-                if palette.hide:
-                    if context.window_manager.ch_show_palette_name:
-                        sub = row.split(factor=0.35)
-                        sub.prop(palette, 'name', text='')
-                        row = sub.row()
-
-                    row.scale_y = 0.75
-                    row.separator(factor=0.5)
-                    self.draw_palette_color(row, palette, i)
-                else:
-                    row.prop(palette, 'name', text='')
-                    row.separator()
-
-                    row.operator('ch.edit_color', icon='TOOL_SETTINGS',
-                                 text='').palette_index = i
-                    row.operator('ch.shuffle_palette', icon='CENTER_ONLY', text='').palette_index = i
-                    row.operator('ch.convert_pantone_color', icon='EVENT_P', text='').palette_index = i
-                    row.separator()
-
-                    row.prop(palette, 'node_group', text='')
-                    node_icon = 'ADD' if not palette.node_group else 'FILE_REFRESH'
-
-                    sub = row.row()
-                    sub.alert = True if palette.node_group_update is True else False
-                    sub.operator('ch.create_nodes_from_palette',
-                                 icon=node_icon, text='').palette_index = i
-
-                    row.separator(factor=0.5)
-
-                    row.operator('ch.palette_extra_op_caller', icon='DOWNARROW_HLT', text='').palette_index = i
-
-                    row = col.row()
-                    self.draw_palette_color(row, palette, i)
+                if body is not None:
+                    self.draw_palette_body(body, palette, i)
 
         col = layout.column()
         col.scale_y = col.scale_x = 1.25

@@ -480,7 +480,7 @@ class CH_OT_batch_generate_color(bpy.types.Operator):
             bpy.ops.ch.add_palette()
 
             src_palette = collection.palettes[-1]
-            src_palette.hide = True
+            src_palette.expanded = False
 
             bpy.ops.ch.edit_color(
                 generate_color=True,
