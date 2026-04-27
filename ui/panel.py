@@ -151,7 +151,7 @@ class SidePanelBase:
 
     def draw_palette_colors(self, layout, palette, palette_index, *, body=False, compact=False):
         row = layout.row(align=True)
-        row.scale_y = 0.75 if compact else 1.5
+        row.scale_y = 1 if compact else 1.5
 
         for i, color in enumerate(palette.colors):
             col = row.column(align=True)
